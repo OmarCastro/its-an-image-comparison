@@ -1,0 +1,11 @@
+{
+  "name": "its-an-image-comparison",
+  "version": "0.1.0",
+  "description": "An i18n web component",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Omar Castro",
+  "license": "MIT",
+}
