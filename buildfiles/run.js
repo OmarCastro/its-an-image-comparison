@@ -19,11 +19,10 @@ To help navigate this file is divided by sections:
 */
 import process from 'node:process'
 import fs, { readFile as fsReadFile, writeFile } from 'node:fs/promises'
-import { resolve, basename } from 'node:path'
+import { resolve, basename, dirname, relative } from 'node:path'
 import { existsSync, readFileSync } from 'node:fs'
 import { promisify } from 'node:util'
-import { exec as baseExec, execFile as baseExecFile, spawn } from 'node:child_process'
-
+import { execFile as baseExecFile, exec as baseExec, spawn } from 'node:child_process'
 const exec = promisify(baseExec)
 const execFile = promisify(baseExecFile)
 const readFile = (path) => fsReadFile(path, { encoding: 'utf8' })
@@ -35,14 +34,13 @@ const pathFromProject = (path) => new URL(path, projectPathURL).pathname
 process.chdir(pathFromProject('.'))
 let updateDevServer = () => {}
 
-const args = process.argv.slice(2)
-
 // @section 2 tasks
 
 const helpTask = {
   description: 'show this help',
   cb: async () => { console.log(helpText()); process.exit(0) },
 }
+
 const tasks = {
   build: {
     description: 'builds the project',
@@ -56,13 +54,9 @@ const tasks = {
     description: 'builds the project',
     cb: async () => { await execTests(); process.exit(0) },
   },
-  linc: {
-    description: 'validates the code only on changed files',
-    cb: async () => { process.exit(await execlintCodeOnChanged()) },
-  },
   lint: {
     description: 'validates the code',
-    cb: async () => { process.exit(await execlintCode()) },
+    cb: async () => { await execlintCode(); process.exit(0) },
   },
   dev: {
     description: 'setup dev environment',
@@ -80,12 +74,25 @@ const tasks = {
     description: 'launch dev server and opens in browser',
     cb: async () => { await openDevServer({ openBrowser: true }); await wait(2 ** 30) },
   },
+  'test-server': {
+    description: 'launch test server, used when running tests',
+    cb: async () => { await openTestServer(); await wait(2 ** 30) },
+  },
+  'release:prepare': {
+    description: 'builds the project and prepares it for release',
+    cb: async () => { await prepareRelease(); process.exit(0) },
+  },
+  'release:clean': {
+    description: 'clean release preparation',
+    cb: async () => { await cleanRelease(); process.exit(0) },
+  },
   help: helpTask,
   '--help': helpTask,
   '-h': helpTask,
 }
 
 async function main () {
+  const args = process.argv.slice(2)
   if (args.length <= 0) {
     console.log(helpText())
     return process.exit(0)
@@ -105,19 +112,33 @@ async function main () {
 
 await main()
 
+// @section 3 jobs
+
 async function execDevEnvironment ({ openBrowser = false } = {}) {
   await openDevServer({ openBrowser })
-  await Promise.all([execlintCodeOnChanged(), execTests()])
-  await execBuild()
+  await Promise.all([execlintCodeOnChanged(), buildTest()])
+  await execTests()
+  await buildDocs()
 
-  const watcher = watchDirs(
-    new URL('src', projectPathURL).pathname,
-    new URL('docs', projectPathURL).pathname
-  )
+  const srcPath = pathFromProject('src')
+  const docsPath = pathFromProject('docs')
+
+  const watcher = watchDirs(srcPath, docsPath)
 
   for await (const change of watcher) {
-    console.log(`file "${change.filename}" changed`)
-    await Promise.all([execBuild(), execTests()])
+    const { filenames } = change
+    console.log(`files "${filenames}" changed`)
+    let tasks = []
+    if (filenames.some(name => name.endsWith('test-page.html') || name.startsWith(srcPath))) {
+      tasks = [buildTest, execTests, buildDocs]
+    } else {
+      tasks = [buildDocs]
+    }
+
+    for (const task of tasks) {
+      await task()
+    }
+
     updateDevServer()
     await execlintCodeOnChanged()
   }
@@ -127,15 +148,40 @@ async function execTests () {
   const COVERAGE_DIR = 'reports/coverage'
   const REPORTS_TMP_DIR = 'reports/.tmp'
   const COVERAGE_TMP_DIR = `${REPORTS_TMP_DIR}/coverage`
+  const FINAL_COVERAGE_TMP_DIR = `${COVERAGE_TMP_DIR}/final`
   const COVERAGE_BACKUP_DIR = 'reports/coverage.bak'
 
-  await cmdSpawn('TZ=UTC npx c8 --all --include "src/**/*.{js,ts}" --exclude "src/**/*.{test,spec}.{js,ts}" --temp-directory ".tmp/coverage" --report-dir reports/.tmp/coverage/unit --reporter json-summary --reporter text-summary --reporter html playwright test')
+  const COVERAGE_REPORTERS = '--reporter json-summary --reporter html --reporter lcov '
+  const UNIT_COVERAGE_INCLUDES = '--include "src/**/*.{js,ts}" --exclude "src/**/*.{test,spec}.{js,ts}" --exclude="src/entrypoint/node.js"'
+  const UI_COVERAGE_INCLUDES = '--include build/docs/dist/qrcode.element.min.js'
+
+  logStartStage('test', 'run tests')
+
+  await cmdSpawn(`TZ=UTC npx c8 --all ${UNIT_COVERAGE_INCLUDES} --temp-directory ".tmp/coverage" --report-dir reports/.tmp/coverage/unit ${COVERAGE_REPORTERS} playwright test`)
+
+  await rm_rf(FINAL_COVERAGE_TMP_DIR)
+  await mkdir_p(FINAL_COVERAGE_TMP_DIR)
+  await cp_R('.tmp/coverage', `${FINAL_COVERAGE_TMP_DIR}/tmp`)
+  const uiTestsExecuted = existsSync('reports/.tmp/coverage/ui/tmp')
+  if (uiTestsExecuted) {
+    await cp_R('reports/.tmp/coverage/ui/tmp', FINAL_COVERAGE_TMP_DIR)
+    await cmdSpawn(`TZ=UTC npx c8  --all ${UI_COVERAGE_INCLUDES} ${COVERAGE_REPORTERS} --report-dir reports/.tmp/coverage/ui report`)
+    logStage('merge unit & ui coverage reports')
+  }
+  await cmdSpawn(`TZ=UTC npx c8 --all ${UNIT_COVERAGE_INCLUDES} ${UI_COVERAGE_INCLUDES} ${COVERAGE_REPORTERS} --report-dir reports/.tmp/coverage/final report`)
+
   if (existsSync(COVERAGE_DIR)) {
+    await rm_rf(COVERAGE_BACKUP_DIR)
     await mv(COVERAGE_DIR, COVERAGE_BACKUP_DIR)
   }
   await mv(COVERAGE_TMP_DIR, COVERAGE_DIR)
-  const rmTmp = rm_rf(REPORTS_TMP_DIR)
-  const rmBak = rm_rf(COVERAGE_BACKUP_DIR)
+  logStage('cleanup coverage info')
+
+  await Promise.allSettled([
+    rm_rf(REPORTS_TMP_DIR),
+    rm_rf(COVERAGE_BACKUP_DIR),
+  ])
+  logStage('build badges')
 
   await Promise.allSettled([
     makeBadgeForCoverages(pathFromProject('reports/coverage/unit')),
@@ -143,89 +189,190 @@ async function execTests () {
     makeBadgeForTestResult(pathFromProject('reports/test-results')),
     makeBadgeForLicense(pathFromProject('reports')),
     makeBadgeForNPMVersion(pathFromProject('reports')),
+    ...(uiTestsExecuted ? [makeBadgeForCoverages(pathFromProject('reports/coverage/ui'))] : []),
   ])
 
-  const files = await getFilesAsArray(`${COVERAGE_DIR}/unit`)
+  logStage('fix report styles')
+  const files = await getFilesAsArray('reports/coverage/final')
   const cpBase = files.filter(path => basename(path) === 'base.css').map(path => fs.cp('buildfiles/assets/coverage-report-base.css', path))
   const cpPrettify = files.filter(path => basename(path) === 'prettify.css').map(path => fs.cp('buildfiles/assets/coverage-report-prettify.css', path))
-  await Promise.all([rmTmp, rmBak, ...cpBase, ...cpPrettify])
+  await Promise.allSettled([...cpBase, ...cpPrettify])
 
+  logStage('copy reports to documentation')
   await rm_rf('build/docs/reports')
   await mkdir_p('build/docs')
   await cp_R('reports', 'build/docs/reports')
+  logEndStage()
 }
 
-async function execBuild () {
-  logStartStage('build', 'clean tmp dir')
+/**
+ * @returns {import('esbuild').BuildOptions} common build option for esbuild
+ */
+function esBuildCommonParams () {
+  return {
+    target: ['es2022'],
+    bundle: true,
+    minify: false,
+    sourcemap: false,
+    absWorkingDir: pathFromProject('.'),
+    logLevel: 'info',
+  }
+}
 
-  await rm_rf('.tmp/build')
-  await mkdir_p('.tmp/build/dist', '.tmp/build/docs')
-
-  logStage('bundle')
+async function buildTest () {
+  logStartStage('build:test', 'bundle')
 
   const esbuild = await import('esbuild')
 
-  const commonBuildParams = {
-    target: ['es2022'],
-    bundle: true,
-    minify: true,
-    sourcemap: true,
-    absWorkingDir: pathFromProject('.'),
-    logLevel: 'info',
-    plugins: [await getESbuildPlugin()],
-  }
+  const commonBuildParams = esBuildCommonParams()
 
-  const esbuild1 = esbuild.build({
+  const buildPath = 'build'
+  const esmDistPath = `${buildPath}/dist/esm`
+  const minDistPath = `${buildPath}/dist`
+  const docsPath = `${buildPath}/docs`
+  const docsDistPath = `${docsPath}/dist`
+  const docsEsmDistPath = `${docsPath}/dist/esm`
+
+  await buildESM(esmDistPath)
+  await buildESM(docsEsmDistPath)
+
+  /**
+   * Builds minified files mapped from ESM, as it is most likely used in production.
+   */
+  const buildDistFromEsm = esbuild.build({
+    ...commonBuildParams,
+    entryPoints: [`${esmDistPath}/entrypoint/browser.js`],
+    outfile: `${minDistPath}/qrcode.element.min.js`,
+    format: 'esm',
+    sourcemap: true,
+    minify: true,
+  })
+
+  /**
+   * Builds minified files mapped from the original source code.
+   * This will the correct mapping to the original code path. With
+   * it the test code coverage will be correct when merging unit tests
+   * and UI tests.
+   */
+  const buildDocsDist = esbuild.build({
     ...commonBuildParams,
     entryPoints: ['src/entrypoint/browser.js'],
-    outfile: '.tmp/build/dist/i18n.element.min.js',
+    outfile: `${docsDistPath}/qrcode.element.min.js`,
     format: 'esm',
+    sourcemap: true,
     metafile: true,
+    minify: true,
     plugins: [await getESbuildPlugin()],
   })
 
-  const esbuild2 = esbuild.build({
-    ...commonBuildParams,
-    entryPoints: ['docs/doc.js'],
-    outdir: '.tmp/build/docs',
-    splitting: true,
-    chunkNames: 'chunk/[name].[hash]',
-    format: 'esm',
-    plugins: [await getESbuildPlugin()],
-  })
+  await Promise.all([buildDistFromEsm, buildDocsDist])
 
-  const esbuild3 = esbuild.build({
-    ...commonBuildParams,
-    entryPoints: ['docs/doc.css'],
-    outfile: '.tmp/build/docs/doc.css',
-    plugins: [await getESbuildPlugin()],
-  })
-
-  await Promise.all([esbuild1, esbuild2, esbuild3])
-
-  const metafile = (await esbuild1).metafile
-
+  const metafile = (await buildDocsDist).metafile
   await mkdir_p('reports')
+  logStage('generating module graph')
   await writeFile('reports/module-graph.json', JSON.stringify(metafile, null, 2))
   const svg = await createModuleGraphSvg(metafile)
   await writeFile('reports/module-graph.svg', svg)
+  logStage('build test page html')
 
-  logStage('copy reports')
-
-  await cp_R('reports', '.tmp/build/docs/reports')
-
-  logStage('build html')
-
-  await exec(`${process.argv[0]} buildfiles/scripts/build-html.js index.html`)
-  await exec(`${process.argv[0]} buildfiles/scripts/build-html.js contributing.html`)
-
-  logStage('move to final dir')
-
-  await rm_rf('build')
-  await cp_R('.tmp/build', 'build')
-  await cp_R('build/dist', 'build/docs/dist')
+  // await exec(`${process.argv[0]} buildfiles/scripts/build-html.js test-page.html`)
 
   logEndStage()
+}
+
+async function buildDocs () {
+  logStartStage('build:docs', 'build docs')
+
+  const esbuild = await import('esbuild')
+  const commonBuildParams = esBuildCommonParams()
+
+  const buildPath = 'build'
+  const docsPath = `${buildPath}/docs`
+
+  /**
+   * Builds documentation specific JS code
+   */
+  const buildDocsJS = esbuild.build({
+    ...commonBuildParams,
+    entryPoints: ['docs/doc.js'],
+    outdir: docsPath,
+    splitting: true,
+    chunkNames: 'chunk/[name].[hash]',
+    format: 'esm',
+    loader: {
+      '.element.html': 'text',
+      '.element.css': 'text',
+    },
+  })
+
+  /**
+   * Builds documentation styles
+   */
+  const buildDocsStyles = esbuild.build({
+    ...commonBuildParams,
+    entryPoints: ['docs/doc.css'],
+    outfile: `${docsPath}/doc.css`,
+  })
+
+  await Promise.all([
+    buildDocsJS, buildDocsStyles,
+    exec(`${process.argv[0]} buildfiles/scripts/build-html.js index.html`),
+    exec(`${process.argv[0]} buildfiles/scripts/build-html.js contributing.html`),
+  ])
+
+  logEndStage()
+}
+
+/**
+ * @param {string} outputDir
+ */
+async function buildESM (outputDir) {
+  const esbuild = await import('esbuild')
+
+  const fileListJS = await listNonIgnoredFiles({ patterns: ['src/**/!(*.spec).js'] })
+  const fileListJsJob = fileListJS.map(async (path) => {
+    const js = readFileSync(path).toString()
+    const updatedJs = js
+      .replaceAll('.element.html"', '.element.html.generated.js"')
+      .replaceAll(".element.html'", ".element.html.generated.js'")
+      .replaceAll('.element.css"', '.element.css.generated.js"')
+      .replaceAll(".element.css'", ".element.css.generated.js'")
+
+    const noSrcPath = path.split('/').slice(1).join('/')
+    const outfile = pathFromProject(`${outputDir}/${noSrcPath}`)
+    const outdir = dirname(outfile)
+    if (!existsSync(outdir)) { await mkdir_p(outdir) }
+    return fs.writeFile(outfile, updatedJs)
+  })
+
+  const fileListCSS = await listNonIgnoredFiles({ patterns: ['src/**/*.element.css'] })
+  const fileListCssJob = fileListCSS.map(async (path) => {
+    const minCss = await minifyCss(await fs.readFile(path, 'utf8'))
+    const minCssJs = await esbuild.transform(minCss, { loader: 'text', format: 'esm' })
+    const noSrcPath = path.split('/').slice(1).join('/')
+    const outfile = pathFromProject(`${outputDir}/${noSrcPath}.generated.js`)
+    const outdir = dirname(outfile)
+    if (!existsSync(outdir)) { await mkdir_p(outdir) }
+    return fs.writeFile(outfile, `// generated code from ${path}\n${minCssJs.code}`)
+  })
+
+  const fileListHtml = await listNonIgnoredFiles({ patterns: ['src/**/*.element.html'] })
+  const fileListHtmlJob = fileListHtml.map(async (path) => {
+    const minHtml = await minifyHtml(await fs.readFile(path, 'utf8'))
+    const minHtmlJs = await esbuild.transform(minHtml, { loader: 'text', format: 'esm' })
+    const noSrcPath = path.split('/').slice(1).join('/')
+    const outfile = pathFromProject(`${outputDir}/${noSrcPath}.generated.js`)
+    const outdir = dirname(outfile)
+    if (!existsSync(outdir)) { await mkdir_p(outdir) }
+    return fs.writeFile(outfile, `// generated code from ${path}\n${minHtmlJs.code}`)
+  })
+
+  await Promise.all([...fileListJsJob, ...fileListCssJob, ...fileListHtmlJob])
+}
+
+async function execBuild () {
+  await buildTest()
+  await buildDocs()
 }
 
 async function execlintCodeOnChanged () {
@@ -259,15 +406,52 @@ async function execlintCode () {
   logStage('validating yaml')
   const returnYamlLint = await validateYaml({ onlyChanged: false })
   logStage('typecheck with typescript')
-  console.log('')
   const returnCodeTs = await cmdSpawn('npx tsc --noEmit -p jsconfig.json')
-  process.stdout.write('[lint] typecheck with typescript '); logEndStage()
+  logEndStage()
   return returnCodeLint + returnCodeTs + returnStyleLint + returnJsonLint + returnYamlLint
 }
 
 async function execGithubBuildWorkflow () {
+  logStartStage('build:github')
+  await buildTest()
   await execTests()
-  await execBuild()
+  await buildDocs()
+}
+
+async function prepareRelease () {
+  await cleanRelease()
+  logStartStage('release:prepare', 'check version')
+  const publishedVersion = await getLatestPublishedVersion()
+  const packageJson = await readPackageJson()
+  const currentVersion = packageJson.version
+
+  const { gt } = await import('semver')
+  if (!gt(currentVersion, publishedVersion)) {
+    throw Error(`current version (${currentVersion}) must be higher than latest published version (${publishedVersion})`)
+  }
+  logEndStage()
+  await buildTest()
+  await execTests()
+  await buildDocs()
+  logStartStage('release:prepare', 'create dist')
+  await cp_R('build/dist', 'dist')
+  logStage('create package')
+  mkdir_p('package/content')
+  await cp_R('dist', 'package/content/dist')
+  await cp_R('README.md', 'package/content/README.md')
+  await cp_R('LICENSE', 'package/content/LICENSE')
+  const files = (await getFilesAsArray('src')).map(path => relative(pathFromProject('.'), path))
+  await Promise.all(files.filter(path => !path.includes('.spec.')).map(path => fs.cp(path, `package/content/${path}`)))
+  await writeFile('package/content/package.json', JSON.stringify({ ...packageJson, devDependencies: undefined, scripts: undefined, directories: undefined }, null, 2))
+  await cmdSpawn('npm pack --pack-destination "' + pathFromProject('package') + '"', { cwd: pathFromProject('package/content') })
+  logEndStage()
+}
+
+async function cleanRelease () {
+  logStartStage('release:clean', 'remove dist')
+  await rm_rf('dist')
+  await rm_rf('package')
+  logEndStage()
 }
 
 // @section 4 utils
@@ -302,7 +486,7 @@ async function mkdir_p (...paths) {
 async function cp_R (src, dest) {
   await cmdSpawn(`cp -r '${src}' '${dest}'`)
 
-  // this command is 1000 times slower that running the command, for that reason it is not used (30 000ms vs 30ms)
+  // this command is a 1000 times slower that running the command, for that reason it is not used (30 000ms vs 30ms)
   // await fs.cp(src, dest, { recursive: true })
 }
 
@@ -377,6 +561,22 @@ async function openDevServer ({ openBrowser = false } = {}) {
     const { default: open } = await import('open')
     open(`https://${host}:${port}/build/docs`)
   }
+}
+
+async function openTestServer () {
+  const { default: serve } = await import('wonton')
+
+  const host = 'localhost'
+  const port = 8182
+
+  const params = {
+    host,
+    port,
+    fallback: 'index.html',
+    live: false,
+    root: pathFromProject('.'),
+  }
+  serve.start(params)
 }
 
 function wait (ms) {
@@ -485,6 +685,7 @@ async function validateFiles ({ patterns, onlyChanged, validation }) {
 
   return errorCount ? 1 : 0
 }
+
 // @section 7 minifiers
 
 async function minifyHtml (htmlText) {

@@ -2,14 +2,16 @@
 import Prism from 'prismjs'
 import { minimatch } from 'minimatch'
 import { imageSize } from 'image-size'
-import { JSDOM } from 'jsdom'
+import { JSDOM, VirtualConsole } from 'jsdom'
 import { marked } from 'marked'
 import { existsSync } from 'node:fs'
 import { readdir, readFile } from 'node:fs/promises'
 import { resolve, relative } from 'node:path'
 
+const virtualConsole = new VirtualConsole()
 const dom = new JSDOM('', {
   url: import.meta.url,
+  virtualConsole,
 })
 /** @type {Window} */
 const window = dom.window
@@ -30,11 +32,12 @@ await import('prismjs/components/prism-bash.js')
 
 const projectPath = new URL('../../', import.meta.url)
 const docsPath = new URL('docs', projectPath).pathname
-const docsOutputPath = new URL('.tmp/build/docs', projectPath).pathname
+const docsOutputPath = new URL('build/docs', projectPath).pathname
 
 const fs = await import('fs')
 
-const data = fs.readFileSync(`${docsPath}/${process.argv[2]}`, 'utf8')
+const filePath = existsSync(`${docsPath}/${process.argv[2]}`) ? `${docsPath}/${process.argv[2]}` : `${docsOutputPath}/${process.argv[2]}`
+const data = fs.readFileSync(filePath, 'utf8')
 
 const parsed = new DOMParser().parseFromString(data, 'text/html')
 document.replaceChild(parsed.documentElement, document.documentElement)
@@ -44,16 +47,8 @@ const exampleCode = (strings, ...expr) => {
 
   for (let i = 0; i < expr.length; i++) {
     statement += String(expr[i]).replace(/</g, '&lt')
-      .replaceAll('{{elementName}}', '<span class="component-name-ref keep-markup">i18n-container</span>')
-      .replaceAll('{{elementNameEditable}}', '<span class="component-name-edit keep-markup" contenteditable="true">i18n-container</span>')
-      .replace(/{{([^¦]+)¦lang}}/g, '<span contenteditable="true" class="lang-edit">$1</span>')
-      .replace(/{{([^¦]+)¦lang¦([^}]+)}}/g, '<span contenteditable="true" class="lang-edit" data-bind-selector="$2">$1</span>')
-      .replace(/{{([^¦]+)¦data-i18n}}/, '<span contenteditable="true" class="data-i18n-edit">$1</span>')
-      .replace(/{{([^¦]+)¦data-i18n¦([^}]+)}}/g, '<span contenteditable="true" class="data-i18n-edit" data-bind-selector="$2">$1</span>')
-      .replace(/{{([^¦]+)¦data-i18n--title}}/, '<span contenteditable="true" class="data-i18n--title-edit">$1</span>')
     statement += strings[i + 1]
   }
-
   return statement
 }
 
@@ -63,31 +58,85 @@ const exampleCode = (strings, ...expr) => {
  */
 const queryAll = (selector) => [...document.documentElement.querySelectorAll(selector)]
 
-const readFileImport = (file) => existsSync(`${docsOutputPath}/${file}`) ? fs.readFileSync(`${docsOutputPath}/${file}`, 'utf8') : fs.readFileSync(`${docsPath}/${file}`, 'utf8')
+const readFileImport = (file) => {
+  const outputFilePath = `${docsOutputPath}/${file}`
+  if (existsSync(outputFilePath)) {
+    return fs.readFileSync(outputFilePath, 'utf8')
+  }
+  const docFilePath = `${docsPath}/${file}`
+  if (existsSync(docFilePath)) {
+    return fs.readFileSync(docFilePath, 'utf8')
+  }
+  const relativePath = new URL(file, 'file://' + filePath).pathname
+  if (existsSync(relativePath)) {
+    return fs.readFileSync(relativePath, 'utf8')
+  }
+  const seachedLocations = [
+    outputFilePath, docFilePath, relativePath,
+  ].map(loc => ' - ' + loc).join('\n')
+  throw Error(`could not import file: file not found. \nhref: ${file}\nfile path: ${filePath} \nLocations seached \n${seachedLocations}`)
+}
 
 const promises = []
 
+/**
+ * @param {Element} element
+ * @returns {string} code classes
+ */
+const exampleCodeClass = (element) => {
+  const { classList } = element
+  const lineNoClass = classList.contains('line-numbers') ? ' line-numbers' : ''
+  const wrapClass = classList.contains('wrap') ? ' wrap' : ''
+  return 'keep-markup' + lineNoClass + wrapClass
+}
+
+queryAll('[ss:include-html]').forEach(element => {
+  const ssInclude = element.getAttribute('ss:include-html')
+  const text = readFileImport(ssInclude)
+  element.innerHTML = text
+  element.removeAttribute('ss:include-html')
+})
+
+queryAll('script[ss:include]').forEach(element => {
+  const ssInclude = element.getAttribute('ss:include')
+  const text = readFileImport(ssInclude)
+  element.textContent = text
+  element.removeAttribute('ss:include')
+})
+
 queryAll('script.html-example').forEach(element => {
   const pre = document.createElement('pre')
-  pre.innerHTML = exampleCode`<code class="language-markup keep-markup">${dedent(element.innerHTML)}</code>`
+  pre.innerHTML = exampleCode`<code class="language-markup ${exampleCodeClass(element)}">${dedent(element.innerHTML)}</code>`
   element.replaceWith(pre)
 })
 
 queryAll('script.css-example').forEach(element => {
   const pre = document.createElement('pre')
-  pre.innerHTML = exampleCode`<code class="language-css keep-markup">${dedent(element.innerHTML)}</code>`
+  pre.innerHTML = exampleCode`<code class="language-css ${exampleCodeClass(element)}">${dedent(element.innerHTML)}</code>`
   element.replaceWith(pre)
 })
 
 queryAll('script.json-example').forEach(element => {
   const pre = document.createElement('pre')
-  pre.innerHTML = exampleCode`<code class="language-json keep-markup">${dedent(element.innerHTML)}</code>`
+  pre.innerHTML = exampleCode`<code class="language-json ${exampleCodeClass(element)}">${dedent(element.innerHTML)}</code>`
   element.replaceWith(pre)
 })
 
 queryAll('script.js-example').forEach(element => {
   const pre = document.createElement('pre')
-  pre.innerHTML = exampleCode`<code class="language-js keep-markup">${dedent(element.innerHTML)}</code>`
+  pre.innerHTML = exampleCode`<code class="language-js ${exampleCodeClass(element)}">${dedent(element.innerHTML)}</code>`
+  element.replaceWith(pre)
+})
+
+queryAll('script.bash-example').forEach(element => {
+  const pre = document.createElement('pre')
+  pre.innerHTML = exampleCode`<code class="language-bash ${exampleCodeClass(element)}">${dedent(element.innerHTML)}</code>`
+  element.replaceWith(pre)
+})
+
+queryAll('script.text-example').forEach(element => {
+  const pre = document.createElement('pre')
+  pre.innerHTML = exampleCode`<code class="${exampleCodeClass(element)}">${dedent(element.innerHTML)}</code>`
   element.replaceWith(pre)
 })
 
@@ -95,27 +144,60 @@ queryAll('svg[ss:include]').forEach(element => {
   const ssInclude = element.getAttribute('ss:include')
   const svgText = readFileImport(ssInclude)
   element.outerHTML = svgText
+  element.removeAttribute('ss:include')
 })
 
 queryAll('[ss:markdown]:not([ss:include])').forEach(element => {
   const md = dedent(element.innerHTML)
+    .replaceAll('\n&gt;', '\n>') // for blockquotes, innerHTML escapes ">" chars
+  console.error(md)
   element.innerHTML = marked(md, { mangle: false, headerIds: false })
+  element.removeAttribute('ss:markdown')
 })
 
 queryAll('[ss:markdown][ss:include]').forEach(element => {
   const ssInclude = element.getAttribute('ss:include')
   const md = readFileImport(ssInclude)
   element.innerHTML = marked(md, { mangle: false, headerIds: false })
+  element.removeAttribute('ss:markdown')
+  element.removeAttribute('ss:include')
 })
 
-queryAll('code').forEach(element => {
-  Prism.highlightElement(element, false)
+queryAll('code').forEach(highlightElement)
+
+queryAll('[ss:aria-label]').forEach(element => {
+  element.removeAttribute('ss:aria-label')
+  if (element.hasAttribute('title') && !element.hasAttribute('aria-label')) {
+    element.setAttribute('aria-label', element.getAttribute('title'))
+  }
 })
 
 queryAll('img[ss:size]').forEach(element => {
   const imageSrc = element.getAttribute('src')
+  const getdefinedLength = (attr) => {
+    if (!element.hasAttribute(attr)) { return undefined }
+    const length = element.getAttribute(attr)
+    if (isNaN(parseInt(length)) || isNaN(+length)) { return undefined }
+    return +length
+  }
+  const definedWidth = getdefinedLength('width')
+  const definedHeight = getdefinedLength('height')
+  if (definedWidth && definedHeight) {
+    return
+  }
   const size = imageSize(`${docsOutputPath}/${imageSrc}`)
   element.removeAttribute('ss:size')
+  const { width, height } = size
+  if (definedWidth) {
+    element.setAttribute('width', `${definedWidth}`)
+    element.setAttribute('height', `${Math.ceil(height * definedWidth / width)}`)
+    return
+  }
+  if (definedHeight) {
+    element.setAttribute('width', `${Math.ceil(width * definedHeight / height)}`)
+    element.setAttribute('height', `${definedHeight}`)
+    return
+  }
   element.setAttribute('width', `${size.width}`)
   element.setAttribute('height', `${size.height}`)
 })
@@ -125,22 +207,30 @@ promises.push(...queryAll('img[ss:badge-attrs]').map(async (element) => {
   const svgText = await readFile(`${docsOutputPath}/${imageSrc}`, 'utf8')
   const div = document.createElement('div')
   div.innerHTML = svgText
-  element.removeAttribute('ss:badge-attrs')
   const svg = div.querySelector('svg')
   if (!svg) { throw Error(`${docsOutputPath}/${imageSrc} is not a valid svg`) }
 
-  const alt = svg.getAttribute('aria-label')
-  if (alt) { element.setAttribute('alt', alt) }
+  if (!element.hasAttribute('alt') && !element.matches('[ss:badge-attrs~=-alt]')) {
+    const alt = svg.getAttribute('aria-label')
+    if (alt) { element.setAttribute('alt', alt) }
+  }
 
-  const title = svg.querySelector('title')?.textContent
-  if (title) { element.setAttribute('title', title) }
+  if (!element.hasAttribute('title') && !element.matches('[ss:badge-attrs~=-title]')) {
+    const title = svg.querySelector('title')?.textContent
+    if (title) { element.setAttribute('title', title) }
+  }
+  element.removeAttribute('ss:badge-attrs')
 }))
 
-queryAll('link[href][rel="stylesheet"][ss:inline]').forEach(element => {
+promises.push(...queryAll('style').map(async element => {
+  element.innerHTML = await minifyCss(element.innerHTML)
+}))
+
+promises.push(...queryAll('link[href][rel="stylesheet"][ss:inline]').map(async element => {
   const href = element.getAttribute('href')
-  const cssText = fs.readFileSync(`${docsOutputPath}/${href}`, 'utf8')
-  element.outerHTML = `<style>${cssText}</style>`
-})
+  const cssText = readFileImport(href)
+  element.outerHTML = `<style>${await minifyCss(cssText)}</style>`
+}))
 
 promises.push(...queryAll('link[href][ss:repeat-glob]').map(async (element) => {
   const href = element.getAttribute('href')
@@ -153,7 +243,7 @@ promises.push(...queryAll('link[href][ss:repeat-glob]').map(async (element) => {
       link.setAttribute(name, value)
     }
     link.removeAttribute('ss:repeat-glob')
-    link.setAttribute('href', relativePath)
+    link.setAttribute('href', filename)
     element.insertAdjacentElement('afterend', link)
   }
   element.remove()
@@ -250,6 +340,12 @@ async function * getFiles (dir) {
   }
 }
 
+async function minifyCss (cssText) {
+  const esbuild = await import('esbuild')
+  const result = await esbuild.transform(cssText, { loader: 'css', minify: true })
+  return result.code
+}
+
 /**
  * Minifies the DOM tree
  * @param {Element} domElement - target DOM tree root element
@@ -336,4 +432,16 @@ function minifyDOM (domElement) {
   const initialMinificationState = updateMinificationStateForElement(domElement, defaultMinificationState)
   walkElementMinification(domElement, initialMinificationState)
   return domElement
+}
+
+/**
+ * Applies syntax highligth on elements
+ * @param {Element} domElement - target DOM tree root element
+ * @returns {Element} root element of the minified DOM
+ */
+function highlightElement (domElement) {
+  Prism.highlightElement(domElement, false)
+  domElement.innerHTML = domElement.innerHTML.split('\n')
+    .map(line => `<span class="line">${line}</span>`)
+    .join('\n')
 }
