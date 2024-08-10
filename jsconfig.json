@@ -1,0 +1,38 @@
+{
+    "compilerOptions": {
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "target": "ESNext",
+        "jsx": "react",
+        "checkJs": true,
+        "strictNullChecks": true,
+        "strictFunctionTypes": true,
+        "allowImportingTsExtensions": true,
+        "allowJs": true,
+        "declaration": true,
+        "declarationMap": true,
+        "strict": true,
+        "noImplicitThis": false,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,  
+        "lib": [
+            "DOM",
+            "DOM.Iterable",
+            "ESNext"
+          ]
+    },
+    "files": [
+        "custom.d.ts"
+    ],
+    "include": [
+        "src/**/*.js",
+        "src/**/*.ts"
+    ],
+    "exclude": [
+        "**/*.spec.ts",
+        "**/*.spec.js",
+        "**/*.test.ts",
+        "**/*.test.js"
+    ]
+}
