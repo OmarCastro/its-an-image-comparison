@@ -34,6 +34,16 @@ const pathFromProject = (path) => new URL(path, projectPathURL).pathname
 process.chdir(pathFromProject('.'))
 let updateDevServer = () => {}
 
+const configuration = {
+  bundleDistName: 'visual-comparison.element.js',
+}
+
+configuration.minfiedBundleDistName ??= (({ bundleDistName: distName }) => {
+  if (distName.endsWith('.min.js')) { return distName }
+  if (distName.endsWith('.js')) { return distName.replace(/\.[^/.]+$/, '') + '.min.js' }
+  return distName + '.min.js'
+})(configuration)
+
 // @section 2 tasks
 
 const helpTask = {
@@ -242,7 +252,7 @@ async function buildTest () {
   const buildDistFromEsm = esbuild.build({
     ...commonBuildParams,
     entryPoints: [`${esmDistPath}/entrypoint/browser.js`],
-    outfile: `${minDistPath}/qrcode.element.min.js`,
+    outfile: `${minDistPath}/${configuration.minfiedBundleDistName}`,
     format: 'esm',
     sourcemap: true,
     minify: true,
@@ -257,7 +267,7 @@ async function buildTest () {
   const buildDocsDist = esbuild.build({
     ...commonBuildParams,
     entryPoints: ['src/entrypoint/browser.js'],
-    outfile: `${docsDistPath}/qrcode.element.min.js`,
+    outfile: `${docsDistPath}/${configuration.minfiedBundleDistName}`,
     format: 'esm',
     sourcemap: true,
     metafile: true,

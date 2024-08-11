@@ -1,4 +1,4 @@
-/* eslint-disable max-lines-per-function, jsdoc/require-jsdoc, jsdoc/require-param-description */
+/* eslint-disable max-lines-per-function, jsdoc/require-jsdoc, jsdoc/require-param-description, sonarjs/no-duplicate-string */
 import Prism from 'prismjs'
 import { minimatch } from 'minimatch'
 import { imageSize } from 'image-size'
@@ -94,14 +94,12 @@ queryAll('[ss:include-html]').forEach(element => {
   const ssInclude = element.getAttribute('ss:include-html')
   const text = readFileImport(ssInclude)
   element.innerHTML = text
-  element.removeAttribute('ss:include-html')
 })
 
 queryAll('script[ss:include]').forEach(element => {
   const ssInclude = element.getAttribute('ss:include')
   const text = readFileImport(ssInclude)
   element.textContent = text
-  element.removeAttribute('ss:include')
 })
 
 queryAll('script.html-example').forEach(element => {
@@ -144,7 +142,6 @@ queryAll('svg[ss:include]').forEach(element => {
   const ssInclude = element.getAttribute('ss:include')
   const svgText = readFileImport(ssInclude)
   element.outerHTML = svgText
-  element.removeAttribute('ss:include')
 })
 
 queryAll('[ss:markdown]:not([ss:include])').forEach(element => {
@@ -152,21 +149,17 @@ queryAll('[ss:markdown]:not([ss:include])').forEach(element => {
     .replaceAll('\n&gt;', '\n>') // for blockquotes, innerHTML escapes ">" chars
   console.error(md)
   element.innerHTML = marked(md, { mangle: false, headerIds: false })
-  element.removeAttribute('ss:markdown')
 })
 
 queryAll('[ss:markdown][ss:include]').forEach(element => {
   const ssInclude = element.getAttribute('ss:include')
   const md = readFileImport(ssInclude)
   element.innerHTML = marked(md, { mangle: false, headerIds: false })
-  element.removeAttribute('ss:markdown')
-  element.removeAttribute('ss:include')
 })
 
 queryAll('code').forEach(highlightElement)
 
 queryAll('[ss:aria-label]').forEach(element => {
-  element.removeAttribute('ss:aria-label')
   if (element.hasAttribute('title') && !element.hasAttribute('aria-label')) {
     element.setAttribute('aria-label', element.getAttribute('title'))
   }
@@ -186,7 +179,6 @@ queryAll('img[ss:size]').forEach(element => {
     return
   }
   const size = imageSize(`${docsOutputPath}/${imageSrc}`)
-  element.removeAttribute('ss:size')
   const { width, height } = size
   if (definedWidth) {
     element.setAttribute('width', `${definedWidth}`)
@@ -219,7 +211,6 @@ promises.push(...queryAll('img[ss:badge-attrs]').map(async (element) => {
     const title = svg.querySelector('title')?.textContent
     if (title) { element.setAttribute('title', title) }
   }
-  element.removeAttribute('ss:badge-attrs')
 }))
 
 promises.push(...queryAll('style').map(async element => {
@@ -242,7 +233,6 @@ promises.push(...queryAll('link[href][ss:repeat-glob]').map(async (element) => {
     for (const { name, value } of element.attributes) {
       link.setAttribute(name, value)
     }
-    link.removeAttribute('ss:repeat-glob')
     link.setAttribute('href', filename)
     element.insertAdjacentElement('afterend', link)
   }
@@ -298,6 +288,10 @@ queryAll('[ss:toc]').forEach(element => {
   }
   element.replaceWith(ol)
 })
+
+queryAll('*').forEach(element => [...element.attributes]
+  .flatMap(attr => attr.name.startsWith('ss:') ? [attr.name] : [])
+  .forEach(name => element.removeAttribute(name)))
 
 const minifiedHtml = '<!doctype html>' + minifyDOM(document.documentElement).outerHTML
 
@@ -437,7 +431,6 @@ function minifyDOM (domElement) {
 /**
  * Applies syntax highligth on elements
  * @param {Element} domElement - target DOM tree root element
- * @returns {Element} root element of the minified DOM
  */
 function highlightElement (domElement) {
   Prism.highlightElement(domElement, false)
