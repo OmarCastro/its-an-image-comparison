@@ -1,16 +1,26 @@
 <div class="container">
     <ul class="tab-list">
-        <li>2 images</li>
-        <li>slider</li>
-        <li>pixel difference</li>
+        <li><label> <input type="radio" name="tab" value="side-by-side" checked> side by side </label></li>
+        <li><label> <input type="radio" name="tab" value="slider"> slider </label></li>
+        <li><label> <input type="radio" name="tab" value="diff"> pixel difference </label></li>
     </ul>
-    <div class="tab 2up">
-        ssss
+    <div class="tab side-by-side">
+        <img class="left-side">
+        <img class="right-side">
     </div>
     <div class="tab slider">
-
+        <div class="comparison-slider">
+            <div class="overlay"><strong>Expected</strong> image.</div>
+            <img class="left-side">
+            <div class="resize">
+                <div class="overlay"> <strong>Result</strong> image.</div>
+                <img class="right-side">
+            </div>
+            <div class="divider"></div>
+          </div>
+          <div class="caption">visual image comaparator slider</div>    
     </div>
     <div class="tab diff">
-
+        diff
     </div>
 </div>

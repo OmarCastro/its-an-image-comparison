@@ -1,0 +1,158 @@
+:host {
+    --bg-color: #e5e5e5;
+    --bg-code-color: #f3f3f3;
+    --bg-sidebar-color: #ddd;
+    --sidebar-border-color: #0002;
+    --bg-color-active: #edecef;
+    --fg-color: #303540;
+    --fg-color-disabled: #404550;
+    --resizable-border-color: #303540;
+    --tab-active-color: #007299;
+}
+
+@media (prefers-color-scheme: dark) {
+    :host {
+        --bg-color: #202530;
+        --bg-code-color: #303540;
+        --bg-sidebar-color: #303540;
+        --sidebar-border-color: #fff2;
+        --bg-color-active: #292d30;
+        --fg-color: #dddcdf;
+        --fg-color-disabled: #ccc;
+        --resizable-border-color: #dddcdf;
+        --tab-active-color: #fa5;
+        --even-tr-bg: #ffffff08;
+    }
+}
+
+.tab{
+    display: none;
+}
+
+.tab-list {
+    padding: 1em;
+    list-style-type: none;
+
+    display: flex;
+    justify-content: space-around;
+    label {
+        padding: 1em;
+        width: 30%;
+        text-align: center;
+        &:has(input:checked), &:hover {
+            background: var(--bg-color-active);
+            cursor: pointer;
+        }        
+    }
+
+    input {
+        appearance: none;
+        display: none;
+    }
+}
+
+.container:has(.tab-list input[value="side-by-side"]:checked) > .tab.side-by-side,
+.container:has(.tab-list input[value="slider"]:checked) > .tab.slider,
+.container:has(.tab-list input[value="diff"]:checked)  > .tab.diff {
+    display: block;
+}
+
+.comparison-slider {
+    position: relative;
+    width: 100%;
+    margin: 0;
+    border: 5px white solid;
+    box-sizing: border-box;
+    > img {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+
+    &:hover .overlay{
+        display: block;
+    }
+
+    .overlay {
+        display: block;
+        position: absolute;
+        width: 250px;
+        bottom: 20px;
+        right: 20px;
+        background-color: rgba(0, 0, 0, 0.4);
+        padding: 10px;
+        box-sizing: border-box;
+        color: #DDD;
+        text-align: right;
+    }
+
+    .resize {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 50%;
+        overflow: hidden;
+        > img {
+            display: block;
+
+        }
+        .overlay {
+            right: auto;
+            left: 20px;
+            text-align: left;
+        }
+    }
+
+    .divider {
+        position: absolute;
+        touch-action: none;
+        width: 2px;
+        height: 100%;
+        background-color: rgba(256, 256, 256, 0.2);
+        left: 50%;
+        top: 0;
+        bottom: 0;
+        margin-left: -1px;
+        cursor: ew-resize;
+        &:before {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            left: -9px;
+            top: 50%;
+            margin-top: -10px;
+            background-color: white;
+            transform: rotate(45deg);
+            transition: all 0.1s ease-in-out;
+        }
+        &:after {
+            content: "";
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            left: -5px;
+            top: 50%;
+            margin-top: -6px;
+            background-color: white;
+            transform: rotate(45deg);
+            transition: all 0.1s ease-in-out;
+        }
+        &.dragging{
+            &:before {
+                width: 30px;
+                height: 30px;
+                left: -14px;
+                margin-top: -15px;
+            }
+            &:after {
+                width: 20px;
+                height: 20px;
+                left: -9px;
+                margin-top: -10px;
+                background-color: #555;
+            }
+        }
+    }
+}
