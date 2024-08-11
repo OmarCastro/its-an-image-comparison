@@ -35,7 +35,7 @@ process.chdir(pathFromProject('.'))
 let updateDevServer = () => {}
 
 const configuration = {
-  bundleDistName: 'visual-comparison.element.js',
+  bundleDistName: 'image-comparison.element.js',
 }
 
 configuration.minfiedBundleDistName ??= (({ bundleDistName: distName }) => {
