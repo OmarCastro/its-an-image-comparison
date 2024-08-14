@@ -45,12 +45,10 @@ export class ImageComparisonElement extends HTMLElement {
     if (!shadowRoot) {
       return
     }
-    /** @type {NodeListOf<HTMLImageElement>} */
     const imgsLightDom = this.querySelectorAll(':scope > img')
 
     if (imgsLightDom.length > 0) {
       const leftImg = imgsLightDom[0]
-      /** @type {NodeListOf<HTMLImageElement>} */
       const leftImages = shadowRoot.querySelectorAll('img.left-side')
       leftImages.forEach(img => {
         img.src = leftImg.src
@@ -59,7 +57,6 @@ export class ImageComparisonElement extends HTMLElement {
 
     if (imgsLightDom.length > 1) {
       const leftImg = imgsLightDom[1]
-      /** @type {NodeListOf<HTMLImageElement>} */
       const leftImages = shadowRoot.querySelectorAll('img.right-side')
       leftImages.forEach(img => {
         img.src = leftImg.src
@@ -75,7 +72,7 @@ export class ImageComparisonElement extends HTMLElement {
 function updateSliderDimensions (slider) {
   const rightSideImage = slider.querySelector(':scope > img')
   const leftSideImage = slider.querySelector('.resize img')
-  if (!(leftSideImage instanceof HTMLElement && rightSideImage instanceof HTMLElement)) { return }
+  if (!leftSideImage || !rightSideImage) { return }
   const imgWidth = rightSideImage.getBoundingClientRect().width + 'px'
   leftSideImage.style.width = imgWidth
 }
@@ -85,10 +82,10 @@ function updateSliderDimensions (slider) {
  * @param {Element} slider - slider element container
  */
 function addSliderDragBehaviour (slider) {
-  const dragElement = slider.querySelector('.divider')
-  const resizeElement = slider.querySelector('.resize')
+  const dragElement = slider.querySelector('div.divider')
+  const resizeElement = slider.querySelector('div.resize')
 
-  if (!(dragElement instanceof HTMLElement && resizeElement instanceof HTMLElement)) { return }
+  if (!dragElement || !resizeElement) { return }
 
   let dragWidth = 0
   let containerOffset = 0
@@ -101,7 +98,7 @@ function addSliderDragBehaviour (slider) {
    */
   const pointermovehandler = function (event) {
     // if the user is using mouse, use preventDefault to prevent the user from
-    // selecting the images as he moves the silder arround.
+    // selecting the images as he moves the silder around.
     if (event.pointerType === 'mouse') {
       event.preventDefault()
     }
@@ -124,7 +121,6 @@ function addSliderDragBehaviour (slider) {
 
   dragElement.addEventListener('pointerdown', () => {
     dragElement.classList.add('dragging')
-    resizeElement.classList.add('resizing')
 
     dragWidth = dragElement.getBoundingClientRect().width
     containerOffset = slider.getBoundingClientRect().left
@@ -137,7 +133,6 @@ function addSliderDragBehaviour (slider) {
     window.addEventListener('pointerup', () => {
       // stop clicping the image and move the slider
       dragElement.classList.remove('dragging')
-      resizeElement.classList.remove('resizing')
       window.removeEventListener('pointermove', pointermovehandler)
     }, { once: true })
   })
