@@ -22,8 +22,10 @@
             "ESNext"
           ]
     },
+    
     "files": [
-        "custom.d.ts"
+        "custom.d.ts",
+        "node_modules/typed-query-selector/strict.d.ts"
     ],
     "include": [
         "src/**/*.js",
