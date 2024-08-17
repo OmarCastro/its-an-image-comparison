@@ -71,14 +71,13 @@ export function distYIQ (r1, g1, b1, r2, g2, b2) {
 }
 
 /**
- *
  * @param {number} r1 - rgb 1 red value
  * @param {number} g1 - rgb 1 green value
  * @param {number} b1 - rgb 1 blue value
  * @param {number} r2 - rgb 2 red value
  * @param {number} g2 - rgb 2 green value
  * @param {number} b2 - rgb 2 blue value
- * @returns {number} YIQ distance value
+ * @returns {number} YIQ delta value
  */
 export function distYIQBrightness (r1, g1, b1, r2, g2, b2) {
   return rgb2y(r1, g1, b1) - rgb2y(r2, g2, b2)
@@ -88,8 +87,9 @@ export function distYIQBrightness (r1, g1, b1, r2, g2, b2) {
  * @param {number} r - rgb red value
  * @param {number} g - rgb green value
  * @param {number} b - rgb blue value
+ * @returns {number} brightness value
  */
-function rgb2y (r, g, b) {
+export function rgb2y (r, g, b) {
   return r * 0.29889531 + g * 0.58662247 + b * 0.11448223
 }
 /**
