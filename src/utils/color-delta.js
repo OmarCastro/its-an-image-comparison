@@ -10,6 +10,29 @@ const maxDelta = {
 }
 
 /**
+ *
+ * @param {Uint8Array | Uint8ClampedArray} img1 - original image
+ * @param {Uint8Array | Uint8ClampedArray} img2 - image to compare
+ * @param {number} posImg1 - pixel position on `img1`
+ * @param {number} posImg2 - pixel position on `img2`
+ * @param {"YIQ"|"CIEDE2000"|"RGB"|"RieRGB"|"Brightness"} algorithm - algorithm used to calculate delta defaults to CIEDE2000
+ * @returns {colorDelta} color delta result
+ */
+export function colorDeltaImgPosition (img1, img2, posImg1, posImg2, algorithm) {
+  const r1 = img1[posImg1 + 0]
+  const g1 = img1[posImg1 + 1]
+  const b1 = img1[posImg1 + 2]
+  const a1 = img1[posImg1 + 3]
+
+  const r2 = img2[posImg2 + 0]
+  const g2 = img2[posImg2 + 1]
+  const b2 = img2[posImg2 + 2]
+  const a2 = img2[posImg2 + 3]
+
+  return colorDelta(r1, g1, b1, a1, r2, g2, b2, a2, algorithm)
+}
+
+/**
  * calculate color difference according to the paper "Measuring perceived color difference
  * using YIQ NTSC transmission color space in mobile applications" by Y. Kotsarenko and F. Ramos
  * @param {number} r1 - color 1 rgba red value
@@ -21,6 +44,7 @@ const maxDelta = {
  * @param {number} b2 - color 2 rgba blue value
  * @param {number} a2 - color 2 rgba alpha value
  * @param {"YIQ"|"CIEDE2000"|"RGB"|"RieRGB"|"Brightness"} algorithm - algorithm used to calculate delta defaults to CIEDE2000
+ * @returns {colorDelta} color delta result
  */
 export function colorDelta (r1, g1, b1, a1, r2, g2, b2, a2, algorithm) {
   algorithm = Object.hasOwn(maxDelta, algorithm) ? algorithm : 'CIEDE2000'
@@ -57,3 +81,10 @@ export function colorDelta (r1, g1, b1, a1, r2, g2, b2, a2, algorithm) {
     deltaPercentToMax: 100 * delta / maxDelta[algorithm],
   }
 }
+
+/**
+ * @typedef {object} colorDelta
+ * @property {number} delta - color delta result
+ * @property {number} maxDelta - max possible result value
+ * @property {number} deltaPercentToMax - result percentage to max value
+ */
