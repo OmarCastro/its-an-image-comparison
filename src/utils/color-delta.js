@@ -1,12 +1,15 @@
 import { colorBlend } from './color-blend'
 import { distYIQ, distCIEDE2000, distRGB, distRieRGB, distYIQBrightness } from './color-metrics'
 
-const maxDelta = {
-  YIQ: 32857.13316,
-  RGB: 195075,
-  RieRGB: 584970.99609,
-  CIEDE2000: 100,
-  Brightness: 255,
+/** @param {number} num - number to round */
+const rounded = (num) => +num.toFixed(5)
+
+export const maxDelta = {
+  YIQ: rounded(distYIQ(0, 0, 0, 255, 255, 255)),
+  RGB: rounded(distRGB(0, 0, 0, 255, 255, 255)),
+  RieRGB: rounded(distRieRGB(0, 0, 0, 255, 255, 255)),
+  CIEDE2000: rounded(distCIEDE2000(0, 0, 0, 255, 255, 255)),
+  Brightness: rounded(Math.abs(distYIQBrightness(0, 0, 0, 255, 255, 255))),
 }
 
 /**
@@ -64,7 +67,7 @@ export function colorDelta (r1, g1, b1, a1, r2, g2, b2, a2, algorithm) {
     ({ R: r2, G: g2, B: b2 } = colorBlend(r1, g1, b1, a1, 255, 255, 255))
   }
 
-  const delta = +(() => {
+  const delta = rounded((() => {
     switch (algorithm) {
       case 'YIQ': return distYIQ(r1, g1, b1, r2, g2, b2)
       case 'RGB': return distRGB(r1, g1, b1, r2, g2, b2)
@@ -73,7 +76,7 @@ export function colorDelta (r1, g1, b1, a1, r2, g2, b2, a2, algorithm) {
       case 'CIEDE2000':
       default: return distCIEDE2000(r1, g1, b1, r2, g2, b2)
     }
-  })().toFixed(5)
+  })())
   return {
     delta,
     maxDelta: maxDelta[algorithm],

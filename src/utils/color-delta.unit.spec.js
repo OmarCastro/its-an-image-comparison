@@ -10,22 +10,22 @@ test('max color delta CIEDE2000', ({ expect }) => {
 
 test('max color delta YIQ', ({ expect }) => {
   expect(colorDelta(0, 0, 0, 255, 255, 255, 255, 255, "YIQ")).toEqual({
-    maxDelta: 32857.13316,
-    delta: 32857.13316,
+    maxDelta: 181.26537,
+    delta: 181.26537,
   })
 })
 
 test('max color delta RGB', ({ expect }) => {
   expect(colorDelta(0, 0, 0, 255, 255, 255, 255, 255, "RGB")).toEqual({
-    maxDelta: 195075,
-    delta: 195075,
+    maxDelta: 441.67296,
+    delta: 441.67296,
   })
 })
 
 test('max color delta RieRGB', ({ expect }) => {
   expect(colorDelta(0, 0, 0, 255, 255, 255, 255, 255, "RieRGB")).toEqual({
-    maxDelta: 584970.99609,
-    delta: 584970.99609,
+    maxDelta: 764.83397,
+    delta: 764.83397,
   })
 })
 
