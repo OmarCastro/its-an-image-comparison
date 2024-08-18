@@ -53,7 +53,6 @@ export function colorDelta (r1, g1, b1, a1, r2, g2, b2, a2, algorithm) {
     return {
       delta: 0,
       maxDelta: maxDelta[algorithm],
-      deltaPercentToMax: 0,
     }
   }
 
@@ -78,7 +77,6 @@ export function colorDelta (r1, g1, b1, a1, r2, g2, b2, a2, algorithm) {
   return {
     delta,
     maxDelta: maxDelta[algorithm],
-    deltaPercentToMax: 100 * delta / maxDelta[algorithm],
   }
 }
 
@@ -86,5 +84,4 @@ export function colorDelta (r1, g1, b1, a1, r2, g2, b2, a2, algorithm) {
  * @typedef {object} colorDelta
  * @property {number} delta - color delta result
  * @property {number} maxDelta - max possible result value
- * @property {number} deltaPercentToMax - result percentage to max value
  */
