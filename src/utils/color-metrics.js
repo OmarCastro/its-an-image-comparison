@@ -1,5 +1,6 @@
-import { ciede2000 } from './color-diff'
+import { ciede2000 } from './color-ciede2000-diff'
 import { rgb_to_lab as rgb2lab } from './color-convert'
+const { sqrt } = Math
 
 /**
  *
@@ -15,7 +16,7 @@ export function distRGB (r1, g1, b1, r2, g2, b2) {
   const dr = r1 - r2
   const dg = g1 - g2
   const db = b1 - b2
-  return dr * dr + dg * dg + db * db
+  return sqrt(dr * dr + dg * dg + db * db)
 }
 
 /**
@@ -49,7 +50,7 @@ export function distRieRGB (r1, g1, b1, r2, g2, b2) {
   const dr = r1 - r2
   const dg = g1 - g2
   const db = b1 - b2
-  return (2 + mr / 256) * dr * dr + 4 * dg * dg + (2 + (255 - mr) / 256) * db * db
+  return sqrt((2 + mr / 256) * dr * dr + 4 * dg * dg + (2 + (255 - mr) / 256) * db * db)
 }
 
 /**
@@ -67,7 +68,7 @@ export function distYIQ (r1, g1, b1, r2, g2, b2) {
   const i = rgb2i(r1, g1, b1) - rgb2i(r2, g2, b2)
   const q = rgb2q(r1, g1, b1) - rgb2q(r2, g2, b2)
 
-  return y * y * 0.5053 + i * i * 0.299 + q * q * 0.1957
+  return sqrt(y * y * 0.5053 + i * i * 0.299 + q * q * 0.1957)
 }
 
 /**
