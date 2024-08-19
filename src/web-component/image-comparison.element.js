@@ -1,5 +1,6 @@
 import html from './image-comparison.element.html'
 import css from './image-comparison.element.css'
+import { calculateDiff } from '../utils/color-diff'
 
 let loadTemplate = () => {
   const templateElement = document.createElement('template')
@@ -13,6 +14,9 @@ let loadStyles = () => {
   loadStyles = () => sheet
   return sheet
 }
+
+const leftImgSelector = 'img.left-side'
+const rightImgSelector = 'img.right-side'
 
 const intersectionObserver = new IntersectionObserver((entries) => {
   for (const entry of entries) {
@@ -38,6 +42,8 @@ export class ImageComparisonElement extends HTMLElement {
     addSliderDragBehaviour(slider)
     intersectionObserver.observe(slider)
     resizeObserver.observe(slider)
+    shadowRoot.querySelector(leftImgSelector)?.addEventListener('load', () => this.updateCanvas())
+    shadowRoot.querySelector(rightImgSelector)?.addEventListener('load', () => this.updateCanvas())
   }
 
   connectedCallback () {
@@ -49,20 +55,67 @@ export class ImageComparisonElement extends HTMLElement {
 
     if (imgsLightDom.length > 0) {
       const leftImg = imgsLightDom[0]
-      const leftImages = shadowRoot.querySelectorAll('img.left-side')
-      leftImages.forEach(img => {
-        img.src = leftImg.src
-      })
+      shadowRoot.querySelectorAll(leftImgSelector).forEach(img => { img.src = leftImg.src })
     }
 
     if (imgsLightDom.length > 1) {
       const leftImg = imgsLightDom[1]
-      const leftImages = shadowRoot.querySelectorAll('img.right-side')
-      leftImages.forEach(img => {
-        img.src = leftImg.src
-      })
+      shadowRoot.querySelectorAll(rightImgSelector).forEach(img => { img.src = leftImg.src })
     }
   }
+
+  updateCanvas () {
+    const { shadowRoot } = this
+    if (!shadowRoot) { return }
+    shadowRoot.querySelectorAll('canvas.diff-image').forEach(canvas => {
+      const leftImage = shadowRoot.querySelector(leftImgSelector)
+      const rightImage = shadowRoot.querySelector(rightImgSelector)
+      if (!isLoadedImg(leftImage) || !isLoadedImg(rightImage)) {
+        return
+      }
+
+      const width = leftImage.naturalWidth
+      const height = leftImage.naturalHeight
+      canvas.width = width
+      canvas.height = height
+
+      const offCanvas1 = new OffscreenCanvas(width, height)
+      const context1 = offCanvas1.getContext('2d')
+
+      const offCanvas2 = new OffscreenCanvas(width, height)
+      const context2 = offCanvas2.getContext('2d')
+
+      const context3 = canvas.getContext('2d')
+
+      if (!context1 || !context2 || !context3) { return }
+
+      context1?.drawImage(leftImage, 0, 0)
+      context2?.drawImage(rightImage, 0, 0)
+
+      const img1 = context1.getImageData(0, 0, width, height)
+      const img2 = context2.getImageData(0, 0, width, height)
+      const diff = context3.createImageData(width, height)
+
+      calculateDiff(img1.data, img2.data, diff.data, width, height, { includeAA: this.antialias })
+      context3.putImageData(diff, 0, 0)
+    })
+  }
+
+  get antialias () {
+    return this.hasAttribute('data-antialias')
+  }
+
+  set antialias (val) {
+    this.toggleAttribute('data-antialias', !!val)
+  }
+}
+
+/**
+ * @param { HTMLImageElement | null} img - target object
+ * @returns {img is HTMLImageElement} true if img is a loaded HTMLImageElement, false otherwise
+ */
+function isLoadedImg (img) {
+  return img != null && img.complete && img.naturalWidth !== 0
 }
 
 /**
