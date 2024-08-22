@@ -30,6 +30,8 @@ const resizeObserver = new ResizeObserver((entries) => {
   }
 })
 
+const componentData = new WeakMap()
+
 export class ImageComparisonElement extends HTMLElement {
   constructor () {
     super()
@@ -44,6 +46,7 @@ export class ImageComparisonElement extends HTMLElement {
     resizeObserver.observe(slider)
     shadowRoot.querySelector(leftImgSelector)?.addEventListener('load', () => this.updateCanvas())
     shadowRoot.querySelector(rightImgSelector)?.addEventListener('load', () => this.updateCanvas())
+    componentData.set(this, {})
   }
 
   connectedCallback () {
@@ -96,9 +99,23 @@ export class ImageComparisonElement extends HTMLElement {
       const img2 = context2.getImageData(0, 0, width, height)
       const diff = context3.createImageData(width, height)
 
-      calculateDiff(img1.data, img2.data, diff.data, width, height, { includeAA: this.antialias })
+      const data = componentData.get(this)
+      data.diffs = calculateDiff(img1.data, img2.data, diff.data, width, height, { includeAA: this.antialias })
+      this.setAttribute('data-diff-pixels', data.diffs.diffPixelAmount.toString())
+
+      if (this.antialias) {
+        this.setAttribute('data-diff-antialias', data.diffs.aaPixelAmount.toString())
+      }
       context3.putImageData(diff, 0, 0)
     })
+  }
+
+  get diffPixelsAmount () {
+    return componentData.get(this).diffPixelAmount ?? NaN
+  }
+
+  get antialiasedPixelsAmount () {
+    return componentData.get(this).aaPixelAmount ?? NaN
   }
 
   get antialias () {
