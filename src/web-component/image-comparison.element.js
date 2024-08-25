@@ -54,15 +54,23 @@ export class ImageComparisonElement extends HTMLElement {
     if (!shadowRoot) {
       return
     }
-    const imgsLightDom = this.querySelectorAll(':scope > img')
+    const imgsLightDom = this.querySelectorAll(':scope > img, :scope > figure > img')
 
     if (imgsLightDom.length > 0) {
       const leftImg = imgsLightDom[0]
+      if (leftImg.parentElement?.matches('figure')) {
+        const text = leftImg.parentElement?.querySelector(':scope > figcaption')?.textContent
+        shadowRoot.querySelectorAll('.overlay--left-side').forEach((element) => { element.textContent = text ?? '' })
+      }
       shadowRoot.querySelectorAll(leftImgSelector).forEach(img => { img.src = leftImg.src })
     }
 
     if (imgsLightDom.length > 1) {
       const leftImg = imgsLightDom[1]
+      if (leftImg.parentElement?.matches('figure')) {
+        const text = leftImg.parentElement?.querySelector(':scope > figcaption')?.textContent
+        shadowRoot.querySelectorAll('.overlay--right-side').forEach((element) => { element.textContent = text ?? '' })
+      }
       shadowRoot.querySelectorAll(rightImgSelector).forEach(img => { img.src = leftImg.src })
     }
   }

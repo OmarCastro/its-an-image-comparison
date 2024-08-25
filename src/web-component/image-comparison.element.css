@@ -77,8 +77,11 @@ canvas {
         display: block;
     }
 
+    .overlay:empty {
+        display: none;
+    }
+
     .overlay {
-        display: block;
         position: absolute;
         width: 250px;
         bottom: 20px;
