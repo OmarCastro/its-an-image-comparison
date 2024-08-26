@@ -60,7 +60,7 @@
                 </{{elementName}}></script>
             </div>
 
-            <div class="example example--basic">
+            <div class="example example--antialias">
                 <h3> With antialias </h3>
                 <image-comparison data-antialias>
                     <img src="assets/image-1.png">
@@ -69,6 +69,50 @@
                 <script type="text/plain" class="html-example"><{{elementName}} data-antialias>
                     <img src="assets/image-1.png">
                     <img src="assets/image-2.png">
+                </{{elementName}}></script>
+            </div>
+
+            <div class="example example--figures">
+                <h3> Using figures </h3>
+                <image-comparison>
+                    <figure>
+                        <img src="assets/image-1.png">
+                    </figure>
+                    <figure>
+                        <img src="assets/image-2.png">
+                    </figure>
+                </image-comparison>
+                <script type="text/plain" class="html-example"><{{elementName}}>
+                    <figure>
+                        <img src="assets/image-1.png">
+                    </figure>
+                    <figure>
+                        <img src="assets/image-2.png">
+                    </figure>
+                </{{elementName}}></script>
+            </div>
+
+            <div class="example example--figures">
+                <h3> With captions </h3>
+                <image-comparison>
+                    <figure>
+                        <img src="assets/image-1.png">
+                        <figcaption>Left image</figcaption>
+                    </figure>
+                    <figure>
+                        <img src="assets/image-2.png">
+                        <figcaption>Right image</figcaption>
+                    </figure>
+                </image-comparison>
+                <script type="text/plain" class="html-example"><{{elementName}}>
+                    <figure>
+                        <img src="assets/image-1.png">
+                        <figcaption>Left image</figcaption>
+                    </figure>
+                    <figure>
+                        <img src="assets/image-2.png">
+                        <figcaption>Right image</figcaption>
+                    </figure>
                 </{{elementName}}></script>
             </div>
     
