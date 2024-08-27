@@ -51,10 +51,22 @@
     }
 }
 
-.container:has(.tab-list input[value="side-by-side"]:checked) > .tab.side-by-side,
+.container:has(.tab-list input[value="side-by-side"]:checked) > .tab.side-by-side {
+    display: flex;
+    gap: 10px;
+}
+
 .container:has(.tab-list input[value="slider"]:checked) > .tab.slider,
 .container:has(.tab-list input[value="diff"]:checked)  > .tab.diff {
     display: block;
+}
+
+.tab.side-by-side > figure {
+    margin: 0;
+}
+
+.tab.side-by-side figcaption {
+    text-align: center;
 }
 
 canvas {

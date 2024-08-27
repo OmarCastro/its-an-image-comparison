@@ -60,7 +60,7 @@ export class ImageComparisonElement extends HTMLElement {
       const leftImg = imgsLightDom[0]
       if (leftImg.parentElement?.matches('figure')) {
         const text = leftImg.parentElement?.querySelector(':scope > figcaption')?.textContent
-        shadowRoot.querySelectorAll('.overlay--left-side').forEach((element) => { element.textContent = text ?? '' })
+        shadowRoot.querySelectorAll('.caption--left-side').forEach((element) => { element.textContent = text ?? '' })
       }
       shadowRoot.querySelectorAll(leftImgSelector).forEach(img => { img.src = leftImg.src })
     }
@@ -69,7 +69,7 @@ export class ImageComparisonElement extends HTMLElement {
       const leftImg = imgsLightDom[1]
       if (leftImg.parentElement?.matches('figure')) {
         const text = leftImg.parentElement?.querySelector(':scope > figcaption')?.textContent
-        shadowRoot.querySelectorAll('.overlay--right-side').forEach((element) => { element.textContent = text ?? '' })
+        shadowRoot.querySelectorAll('.caption--right-side').forEach((element) => { element.textContent = text ?? '' })
       }
       shadowRoot.querySelectorAll(rightImgSelector).forEach(img => { img.src = leftImg.src })
     }

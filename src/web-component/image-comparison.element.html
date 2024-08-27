@@ -5,20 +5,25 @@
         <li><label> <input type="radio" name="tab" value="diff"> pixel difference </label></li>
     </ul>
     <div class="tab side-by-side">
-        <img class="left-side">
-        <img class="right-side">
+        <figure>
+            <img class="left-side">
+            <figcaption class="caption--left-side"></figcaption>
+        </figure>
+        <figure>
+            <img class="right-side">
+            <figcaption class="caption--right-side"></figcaption>
+        </figure>
     </div>
     <div class="tab slider">
         <div class="comparison-slider">
-            <div class="overlay overlay--right-side"></div>
+            <div class="overlay caption--right-side"></div>
             <img class="right-side">
             <div class="resize">
-                <div class="overlay overlay--left-side"></div>
+                <div class="overlay caption--left-side"></div>
                 <img class="left-side">
             </div>
             <div class="divider"></div>
           </div>
-          <div class="caption">visual image comaparator slider</div>    
     </div>
     <div class="tab diff">
         <canvas class="diff-image"></canvas>
