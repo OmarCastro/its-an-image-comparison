@@ -305,7 +305,7 @@ async function buildDocs () {
    */
   const buildDocsJS = esbuild.build({
     ...commonBuildParams,
-    entryPoints: ['docs/doc.js'],
+    entryPoints: ['docs/doc.js', 'docs/color-test.js'],
     outdir: docsPath,
     splitting: true,
     chunkNames: 'chunk/[name].[hash]',
@@ -329,6 +329,7 @@ async function buildDocs () {
     buildDocsJS, buildDocsStyles,
     exec(`${process.argv[0]} buildfiles/scripts/build-html.js index.html`),
     exec(`${process.argv[0]} buildfiles/scripts/build-html.js contributing.html`),
+    exec(`${process.argv[0]} buildfiles/scripts/build-html.js color-test.html`),
   ])
 
   logEndStage()

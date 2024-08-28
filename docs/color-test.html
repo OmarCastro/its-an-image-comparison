@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>It's an image comparison documentation</title>
+        <meta name="description" content="documentation of 'It's an image comparison' web component">
+        <meta name="keywords" content="polkit policy-kit security documentation">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width">
+        <script type="module" src="dist/image-comparison.element.min.js?named=image-comparison" async></script>
+        <script type="module" src="color-test.js" async></script>
+        <link rel="stylesheet" href="code-example.css" ss:inline>
+        <link rel="stylesheet" href="doc.css" ss:inline>
+        <style>
+            .rgb-block {
+                display: inline-block;
+                width: 2em;
+                height: 2em;
+                background-color: var(--bg);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="sidebar">
+
+        <div class="toc">
+            <div class="toc">
+                <p><strong>Documentation</strong></p>
+                <template ss:toc></template>
+                <p><strong><a href="contributing">How to contribute</a></strong></p>
+            </div>
+        </div>
+    </div>
+    <div class="content">
+
+        <h1 class="no-toc">
+            It's an image comparison
+        </h1>
+
+
+        <section class="section section--badge">
+            <a href="https://github.com/OmarCastro/its-an-image-comparison/blob/master/LICENSE" title="View license on repository" ss:aria-label>
+                <img src="reports/license-badge-a11y.svg" ss:size ss:badge-attrs="-title"></img>
+            </a>
+            <a href="reports/playwright-report" title="Show test results" ss:aria-label>
+                <img src="reports/test-results/test-results-badge-a11y.svg" ss:size ss:badge-attrs="-title"></img>
+            </a>
+            <a href="reports/coverage/final" title="Show test code coverage information" ss:aria-label>
+                <img src="reports/coverage/unit/coverage-badge-a11y.svg" ss:size ss:badge-attrs="-title"></img>
+            </a>
+            <a href="https://github.com/OmarCastro/its-an-image-comparison" title="View code repository" ss:aria-label>
+            </a>
+            <a href="https://github.com/OmarCastro/its-an-image-comparison/releases/latest" title="View release notes" ss:aria-label>
+            </a>
+
+        </section>
+
+        <section class="section section--examples">
+
+
+
+            <h2> Examples </h2>
+
+
+            <div class="rgb-test">
+                <div class="rgb-block rgb-block-1" style="--bg: rgb(41 56 157)"></div>
+                <div class="rgb-block rgb-block-2" style="--bg: rgb(41 56 0)"></div>
+                <div class="result-YIQ-b1-b2"></div>
+                <div class="result-YIQ-b2-b1"></div>
+                <div class="result-CIEDE-b1-b2"></div>
+                <div class="result-CIEDE-b2-b1"></div>
+            </div>
+
+            <div class="rgb-test">
+                <div class="rgb-block rgb-block-1" style="--bg: rgb(0 254 252)"></div>
+                <div class="rgb-block rgb-block-2" style="--bg: rgb(94 254 252)"></div>
+                <div class="result-YIQ-b1-b2"></div>
+                <div class="result-YIQ-b2-b1"></div>
+                <div class="result-CIEDE-b1-b2"></div>
+                <div class="result-CIEDE-b2-b1"></div>
+            </div>
+
+            <div class="example example--basic">
+                <h3> YIQ </h3>
+                
+            </div>
+
+            <div class="example example--basic">
+                <h3> CIEDE </h3>
+                
+            </div>
+    
+        </section>
+
+    </body>
+</html>
