@@ -1,3 +1,5 @@
+/** @import { rgbcolor } from './color-types' */
+
 /**
  *
  * @param {number} r1 - color 1 rgba red value

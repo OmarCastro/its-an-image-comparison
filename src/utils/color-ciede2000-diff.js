@@ -1,5 +1,6 @@
-/* eslint-disable camelcase, jsdoc/tag-lines */
-const { sqrt, pow, cos, atan2, sin, abs, exp, PI } = Math
+/* eslint-disable camelcase */
+/** @import { labcolor } from './color-types' */
+const { sqrt, pow, cos, atan2, sin, abs, exp, PI, hypot } = Math
 
 /**
  * Returns diff between c1 and c2 using the CIEDE2000 algorithm
@@ -7,8 +8,9 @@ const { sqrt, pow, cos, atan2, sin, abs, exp, PI } = Math
  * Implemented as in "The CIEDE2000 Color-Difference Formula:
  * Implementation Notes, Supplementary Test Data, and Mathematical Observations"
  * by Gaurav Sharma, Wencheng Wu and Edul N. Dalal.
- * @param {labcolor} c1    Should have fields L,a,b
- * @param {labcolor} c2    Should have fields L,a,b
+ *
+ * @param {labcolor} c1    CIE L*a*b* color object, should have fields L,a,b
+ * @param {labcolor} c2    CIE L*a*b* color object, should have fields L,a,b
  * @returns {number}   Difference between c1 and c2
  */
 export function ciede2000 (c1, c2) {
@@ -30,19 +32,19 @@ export function ciede2000 (c1, c2) {
   /**
    * Step 1: Calculate C₁', C₂', h₁', h₂'
    */
-  const C1 = sqrt(pow(a1, 2) + pow(b1, 2)) // C₁ (2)
-  const C2 = sqrt(pow(a2, 2) + pow(b2, 2)) // C₂ (2)
+  const C1 = hypot(a1, b1) // C₁ (2)
+  const C2 = hypot(a2, b2) // C₂ (2)
 
   const a_C1_C2 = (C1 + C2) / 2.0             // (3)
 
   const G = 0.5 * (1 - sqrt(pow(a_C1_C2, 7.0) /
-                          (pow(a_C1_C2, 7.0) + pow(25.0, 7.0)))) // (4)
+                          (pow(a_C1_C2, 7.0) + 25.0 ** 7.0))) // (4)
 
   const a1p = (1.0 + G) * a1 // (5)
   const a2p = (1.0 + G) * a2 // (5)
 
-  const C1p = sqrt(pow(a1p, 2) + pow(b1, 2)) // C₁' (6)
-  const C2p = sqrt(pow(a2p, 2) + pow(b2, 2)) // C₂' (6)
+  const C1p = hypot(a1p, b1) // C₁' (6)
+  const C2p = hypot(a2p, b2) // C₂' (6)
 
   const h1p = hp_f(b1, a1p) // h₁' (7)
   const h2p = hp_f(b2, a2p) // h₂' (7)
@@ -79,7 +81,7 @@ export function ciede2000 (c1, c2) {
 }
 
 /**
- * calculate h' value, follows the next formula:
+ * Calculates h' value, follows the next formula:
  *
  *      ⎧ 0                b*=a'=0
  * h' = ⎨
@@ -99,7 +101,7 @@ function hp_f (x, y) { // (7)
 }
 
 /**
- * calculate 𝚫h' value, follows the next formula:
+ * Calculates 𝚫h' value, follows the next formula:
  *
  *       ⎧ 0                C₁'C₂'=0
  *       ⎪
@@ -115,7 +117,7 @@ function hp_f (x, y) { // (7)
  * @param {number} h2p - h₂' value
  * @returns {number} 𝚫h' value
  */
-const dhp_f = function (C1, C2, h1p, h2p) { // (10)
+function dhp_f (C1, C2, h1p, h2p) { // (10)
   if (C1 * C2 === 0) return 0
   else if (abs(h2p - h1p) <= 180) return h2p - h1p
   else if ((h2p - h1p) > 180) return (h2p - h1p) - 360
@@ -124,7 +126,7 @@ const dhp_f = function (C1, C2, h1p, h2p) { // (10)
 }
 
 /**
- * calculate h͞' value, follows the next formula:
+ * Calculates h͞' value, follows the next formula:
  *
  *      ⎧ h₁'+h₂'          C₁'C₂'=0
  *      ⎪
@@ -146,7 +148,7 @@ const dhp_f = function (C1, C2, h1p, h2p) { // (10)
  * @param {number} h2p - h₂' value
  * @returns {number} 𝚫h' value
  */
-const a_hp_f = function (C1, C2, h1p, h2p) { // (14)
+function a_hp_f (C1, C2, h1p, h2p) { // (14)
   if (C1 * C2 === 0) return h1p + h2p
   else if (abs(h1p - h2p) <= 180) return (h1p + h2p) / 2.0
   else if ((abs(h1p - h2p) > 180) && ((h1p + h2p) < 360)) return (h1p + h2p + 360) / 2.0
@@ -155,12 +157,13 @@ const a_hp_f = function (C1, C2, h1p, h2p) { // (14)
 }
 
 /**
- * convert radians to degrees
+ * Converts radians to degrees
  * @param {number} radians - number in radians
  */
 function degrees (radians) { return radians * (180 / PI) }
+
 /**
- * convert degrees to radians
+ * Converts degrees to radians
  * @param {number} degrees - number in degrees
  */
 function radians (degrees) { return degrees * (PI / 180) }

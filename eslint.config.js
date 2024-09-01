@@ -33,6 +33,7 @@ export default [
       'jsdoc/require-returns': ['warn', { publicOnly: true }],
       'sonarjs/cognitive-complexity': ['error', 15],
       'max-lines-per-function': ['warn', 75],
+      'jsdoc/tag-lines': ['error', 'any', { startLines: null }]
     },
   },
 ]

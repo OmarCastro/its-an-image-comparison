@@ -20,7 +20,7 @@ document.querySelectorAll('.rgb-test').forEach(testEl => {
  * @param {Element} locationResult
  * @param {*} rgb1
  * @param {*} rgb2
- * @param algorithm
+ * @param {Parameters<typeof colorDelta>[8]} algorithm
  */
 function calculateDelta (locationResult, rgb1, rgb2, algorithm) {
   if (!locationResult) { return }

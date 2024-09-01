@@ -42,3 +42,6 @@
  * @property {number} a - LAB Color a* axis value
  * @property {number} b - LAB Color a value
  */
+
+// this line is for /** @import */ to work on typescript
+export default undefined
