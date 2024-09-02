@@ -108,7 +108,14 @@ export class ImageComparisonElement extends HTMLElement {
       const diff = context3.createImageData(width, height)
 
       const data = componentData.get(this)
-      data.diffs = calculateDiff(img1.data, img2.data, diff.data, width, height, { includeAA: this.antialias })
+      data.diffs = calculateDiff({
+        img1: img1.data,
+        img2: img2.data,
+        output: diff.data,
+        width,
+        height,
+        antialias: this.antialias
+      })
       this.setAttribute('data-diff-pixels', data.diffs.diffPixelAmount.toString())
 
       if (this.antialias) {
