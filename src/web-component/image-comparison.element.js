@@ -1,6 +1,7 @@
 import html from './image-comparison.element.html'
 import css from './image-comparison.element.css'
 import { calculateDiff } from '../utils/color-diff'
+import { colorOrFallbackColorToRGBA } from '../utils/html-color-to-rgba'
 
 let loadTemplate = () => {
   const templateElement = document.createElement('template')
@@ -21,6 +22,16 @@ const rightImgSelector = 'img.right-side'
 const intersectionObserver = new IntersectionObserver((entries) => {
   for (const entry of entries) {
     updateSliderDimensions(entry.target)
+  }
+})
+
+const canvasIntersectionObserver = new IntersectionObserver((entries) => {
+  for (const entry of entries) {
+    const rootNode = entry.target.getRootNode()
+    if (!(rootNode instanceof ShadowRoot)) { return }
+    const { host } = rootNode
+    if (!(host instanceof ImageComparisonElement)) { return }
+    updateDiffColors(host)
   }
 })
 
@@ -81,6 +92,7 @@ export class ImageComparisonElement extends HTMLElement {
     shadowRoot.querySelectorAll('canvas.diff-image').forEach(canvas => {
       const leftImage = shadowRoot.querySelector(leftImgSelector)
       const rightImage = shadowRoot.querySelector(rightImgSelector)
+
       if (!isLoadedImg(leftImage) || !isLoadedImg(rightImage)) {
         return
       }
@@ -105,13 +117,20 @@ export class ImageComparisonElement extends HTMLElement {
 
       const img1 = context1.getImageData(0, 0, width, height)
       const img2 = context2.getImageData(0, 0, width, height)
-      const diff = context3.createImageData(width, height)
+      const diff = context3.createImageData(width, height, { colorSpace: 'srgb' })
+      const antialiasImgData = new Uint8ClampedArray(width * height * 4)
 
       const data = componentData.get(this)
+
+      data.aaData = antialiasImgData
+      data.appliedAAColor = null
+
       data.diffs = calculateDiff({
         img1: img1.data,
         img2: img2.data,
         output: diff.data,
+        antialiasOutput: antialiasImgData,
+        aaColor: 'black',
         width,
         height,
         antialias: this.antialias
@@ -121,7 +140,10 @@ export class ImageComparisonElement extends HTMLElement {
       if (this.antialias) {
         this.setAttribute('data-diff-antialias', data.diffs.aaPixelAmount.toString())
       }
+
       context3.putImageData(diff, 0, 0)
+      updateDiffColors(this)
+      canvasIntersectionObserver.observe(canvas)
     })
   }
 
@@ -140,6 +162,42 @@ export class ImageComparisonElement extends HTMLElement {
   set antialias (val) {
     this.toggleAttribute('data-antialias', !!val)
   }
+}
+
+/**
+ *
+ * @param {ImageComparisonElement} component - component
+ */
+function updateDiffColors (component) {
+  const data = componentData.get(component)
+
+  const antialiasImgData = data.aaData
+  const appliedAAColor = data.appliedAAColor
+  if (!antialiasImgData) { return }
+
+  const aaColorToApply = getComputedStyle(component).getPropertyValue('--antialias-diff-color')
+  if (aaColorToApply === appliedAAColor) { return }
+
+  const { shadowRoot } = component
+  if (!shadowRoot) { return }
+  shadowRoot.querySelectorAll('canvas.diff-image').forEach(canvas => {
+    const context = canvas.getContext('2d')
+    if (!context) { return }
+    const diff = context.getImageData(0, 0, canvas.width, canvas.height, { colorSpace: 'srgb' })
+
+    const aaRGBAColor = colorOrFallbackColorToRGBA(aaColorToApply, 'yellow')
+    for (let pos = 0, e = antialiasImgData.length; pos < e; pos += 4) {
+      if (antialiasImgData[pos + 3] > 0) {
+        const { data } = diff
+        data[pos] = aaRGBAColor[0]
+        data[pos + 1] = aaRGBAColor[1]
+        data[pos + 2] = aaRGBAColor[2]
+        data[pos + 3] = aaRGBAColor[3]
+      }
+    }
+    data.appliedAAColor = aaColorToApply
+    context.putImageData(diff, 0, 0)
+  })
 }
 
 /**

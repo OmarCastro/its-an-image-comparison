@@ -11,9 +11,10 @@ const fallbackDiffColor = 'red'
  * @param {object} params - function parameters
  * @param {Uint8Array | Uint8ClampedArray} params.img1 - original image
  * @param {Uint8Array | Uint8ClampedArray} params.img2 - image to compare
- * @param {Uint8Array | Uint8ClampedArray | null | undefined} params.output - output image
  * @param {number} params.width - images width
  * @param {number} params.height - images height
+ * @param {Uint8Array | Uint8ClampedArray | null} [params.output] - output image
+ * @param {Uint8Array | Uint8ClampedArray | null} [params.antialiasOutput] - output image for antialias, useful if you need a separate image for antialias, uses `params.output` if undefined
  * @param {number} [params.threshold] - diff options
  * @param {boolean} [params.antialias] - whether to include anti-aliasing detection
  * @param {string} [params.aaColor] - color of anti-aliased pixels in diff output
@@ -23,7 +24,7 @@ const fallbackDiffColor = 'red'
  * @returns {{diffPixelAmount: number, aaPixelAmount: number}} number of different pixels
  */
 export function calculateDiff ({
-  img1, img2, output, width, height,
+  img1, img2, output, antialiasOutput, width, height,
   threshold = 0.1,
   antialias = false,
   aaColor = fallbackAAColor,
@@ -31,9 +32,11 @@ export function calculateDiff ({
   diffMask = false,
   alpha = 0.1,
 }) {
+  antialiasOutput ??= output
+
   if (!isPixelData(img1) || !isPixelData(img2) || (output && !isPixelData(output))) { throw new Error('Image data: Uint8Array or Uint8ClampedArray expected.') }
 
-  if (img1.length !== img2.length || (output && output.length !== img1.length)) { throw new Error('Image sizes do not match.') }
+  if (img1.length !== img2.length || (output && output.length !== img1.length) || (antialiasOutput && antialiasOutput.length !== img1.length)) { throw new Error('Image sizes do not match.') }
 
   if (img1.length !== width * height * 4) throw new Error('Image data size does not match width/height.')
 
@@ -66,8 +69,7 @@ export function calculateDiff ({
         // check it's a real rendering difference or just anti-aliasing
         if (antialias && (antialiased(img1, x, y, width, height, img2) || antialiased(img2, x, y, width, height, img1))) {
           // one of the pixels is anti-aliasing; draw as yellow and do not count as difference
-          // note that we do not include such pixels in a mask
-          if (output && !diffMask) drawPixel(output, pos, aaR, aaG, aaB)
+          if (antialiasOutput) drawPixel(antialiasOutput, pos, aaR, aaG, aaB)
           aaPixelAmount++
         } else {
           // found substantial difference not caused by anti-aliasing; draw it as such
