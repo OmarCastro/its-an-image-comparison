@@ -1,8 +1,9 @@
 /* eslint-disable sonarjs/cognitive-complexity */
 
-import { colorDeltaImgPosition } from './color-delta'
+import { colorDeltaImgPosition, validAlgorithms } from './color-delta'
 import { rgb2y } from './color-metrics'
 import { colorOrFallbackColorToRGBA } from './html-color-to-rgba'
+/** @import {Algorithm} from './color-delta' */
 
 const fallbackAAColor = 'yellow'
 const fallbackDiffColor = 'red'
@@ -13,9 +14,66 @@ const fallbackDiffColor = 'red'
  * @param {Uint8Array | Uint8ClampedArray} params.img2 - image to compare
  * @param {number} params.width - images width
  * @param {number} params.height - images height
+ * @param {Algorithm} [params.algorithm] - output image
+ * @returns {{identical: boolean, diffMap: Uint8Array}} number of different pixels
+ */
+export function getNormalizedDiffs ({ img1, img2, width, height, algorithm = 'CIEDE2000' }) {
+  validateImagePreconditions({ img1, img2, width, height })
+  if (!validAlgorithms.includes(algorithm)) { throw new Error(`Invalid algorithm ${algorithm}, expected algorithms: ${validAlgorithms.join(', ')}.`) }
+
+  const len = width * height
+  const diffMap = new Uint8Array(len)
+  const a32 = new Uint32Array(img1.buffer, img1.byteOffset, len)
+  const b32 = new Uint32Array(img2.buffer, img2.byteOffset, len)
+  let identical = true
+
+  for (let pixelPos = 0; pixelPos < len; pixelPos++) {
+    if (a32[pixelPos] === b32[pixelPos]) { continue } // Fast way to check if pixels are identical
+    const pos = pixelPos * 4
+    const { delta, maxDelta } = colorDeltaImgPosition(img1, img2, pos, pos, algorithm)
+    diffMap[pixelPos] = Math.ceil(Math.abs(delta) * 100 / maxDelta)
+    identical = false
+  }
+
+  return { identical, diffMap }
+}
+
+/**
+ * @param {object} params - function parameters
+ * @param {Uint8Array | Uint8ClampedArray} params.img1 - original image
+ * @param {Uint8Array | Uint8ClampedArray} params.img2 - image to compare
+ * @param {number} params.width - images width
+ * @param {number} params.height - images height
+ * @returns {Uint8Array} anti alias map
+ */
+export function getAntialiasMap (params) {
+  validateImagePreconditions(params)
+  const { img1, img2, width, height } = params
+  const len = width * height
+  const antiAliasMap = new Uint8Array(len)
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (antialiased(img1, x, y, width, height, img2) || antialiased(img2, x, y, width, height, img1)) {
+        antiAliasMap[y * width + x] = 1
+      }
+    }
+  }
+  return antiAliasMap
+}
+/**
+ * @param {object} params - function parameters
+ * @param {Uint8Array | Uint8ClampedArray} params.img1 - original image
+ * @param {Uint8Array | Uint8ClampedArray} params.img2 - image to compare
+ * @param {number} params.width - images width
+ * @param {number} params.height - images height
  * @param {Uint8Array | Uint8ClampedArray | null} [params.output] - output image
- * @param {Uint8Array | Uint8ClampedArray | null} [params.antialiasOutput] - output image for antialias, useful if you need a separate image for antialias, uses `params.output` if undefined
- * @param {number} [params.threshold] - diff options
+ * @param {Uint8Array | Uint8ClampedArray | null} [params.antialiasOutput] - output image for
+ *     antialias, useful if you need a separate image for antialias, uses `params.output` if
+ *     undefined
+ * @param {number} [params.threshold] - theshold value, integer number between 0 and 100, both
+ *     inclusive, if the difference is below or equal the theshold, it is considered similar
+ *     pixel, and will not count as a different pixel
  * @param {boolean} [params.antialias] - whether to include anti-aliasing detection
  * @param {string} [params.aaColor] - color of anti-aliased pixels in diff output
  * @param {string} [params.diffColor] - color of different pixels in diff output
@@ -25,7 +83,7 @@ const fallbackDiffColor = 'red'
  */
 export function calculateDiff ({
   img1, img2, output, antialiasOutput, width, height,
-  threshold = 0.1,
+  threshold = 10,
   antialias = false,
   aaColor = fallbackAAColor,
   diffColor = fallbackDiffColor,
@@ -34,16 +92,14 @@ export function calculateDiff ({
 }) {
   antialiasOutput ??= output
 
-  if (!isPixelData(img1) || !isPixelData(img2) || (output && !isPixelData(output))) { throw new Error('Image data: Uint8Array or Uint8ClampedArray expected.') }
-
+  validateImagePreconditions({ img1, img2, width, height, output })
   if (img1.length !== img2.length || (output && output.length !== img1.length) || (antialiasOutput && antialiasOutput.length !== img1.length)) { throw new Error('Image sizes do not match.') }
 
-  if (img1.length !== width * height * 4) throw new Error('Image data size does not match width/height.')
+  const { identical, diffMap } = getNormalizedDiffs({ img1, img2, width, height, algorithm: 'CIEDE2000' })
 
-  if (isImageIdentical(img1, img2, width, height)) { // fast path if identical
+  if (identical) { // fast path if identical
     if (output && !diffMask) {
-      const len = width * height
-      for (let i = 0; i < len; i++) drawGrayPixel(img1, 4 * i, alpha, output)
+      for (let i = 0, len = width * height; i < len; i++) drawGrayPixel(img1, 4 * i, alpha, output)
     }
     return {
       diffPixelAmount: 0,
@@ -61,11 +117,10 @@ export function calculateDiff ({
     for (let x = 0; x < width; x++) {
       const pos = (y * width + x) * 4
 
-      const { delta, maxDelta } = colorDeltaImgPosition(img1, img2, pos, pos, 'CIEDE2000')
-      const thresholdDelta = maxDelta * threshold
+      const normalizedDelta = diffMap[y * width + x]
 
       // the color difference is above the threshold
-      if (Math.abs(delta) > thresholdDelta) {
+      if (normalizedDelta > threshold) {
         // check it's a real rendering difference or just anti-aliasing
         if (antialias && (antialiased(img1, x, y, width, height, img2) || antialiased(img2, x, y, width, height, img1))) {
           // one of the pixels is anti-aliasing; draw as yellow and do not count as difference
@@ -90,25 +145,6 @@ export function calculateDiff ({
     diffPixelAmount,
     aaPixelAmount,
   }
-}
-
-/**
- * Fast way to check if image are identical
- * @param {Uint8Array | Uint8ClampedArray} img1 - original image
- * @param {Uint8Array | Uint8ClampedArray} img2 - image to compare
- * @param {number} width - images width
- * @param {number} height - images height
- * @returns {boolean} true if identical, false otherwise
- */
-function isImageIdentical (img1, img2, width, height) {
-  const len = width * height
-  const a32 = new Uint32Array(img1.buffer, img1.byteOffset, len)
-  const b32 = new Uint32Array(img2.buffer, img2.byteOffset, len)
-
-  for (let i = 0; i < len; i++) {
-    if (a32[i] !== b32[i]) { return false }
-  }
-  return true
 }
 
 /**
@@ -246,4 +282,20 @@ function drawGrayPixel (img, pos, alpha, output) {
   const brightness = rgb2y(r, g, b)
   const val = 255 + (brightness - 255) * a
   drawPixel(output, pos, val, val, val)
+}
+
+/**
+ * @param {object} params - function parameters
+ * @param {Uint8Array | Uint8ClampedArray} params.img1 - original image
+ * @param {Uint8Array | Uint8ClampedArray} params.img2 - image to compare
+ * @param {Uint8Array | Uint8ClampedArray | null} [params.output] - output image
+ * @param {number} params.width - images width
+ * @param {number} params.height - images height
+ */
+function validateImagePreconditions ({ img1, img2, width, height, output }) {
+  if (!isPixelData(img1) || !isPixelData(img2) || (output && !isPixelData(output))) { throw new Error('Image data: Uint8Array or Uint8ClampedArray expected.') }
+
+  if (img1.length !== img2.length) { throw new Error('Image sizes do not match.') }
+
+  if (img1.length !== width * height * 4) { throw new Error('Image data size does not match width/height.') }
 }

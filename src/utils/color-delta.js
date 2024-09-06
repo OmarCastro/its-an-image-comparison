@@ -12,13 +12,16 @@ export const maxDelta = {
   Brightness: rounded(Math.abs(distYIQBrightness(0, 0, 0, 255, 255, 255))),
 }
 
+export const validAlgorithms = Object.freeze(/** @type {const} */(['YIQ', 'CIEDE2000', 'RGB', 'RieRGB', 'Brightness']))
+/** @typedef {(typeof validAlgorithms)[number]} Algorithm */
+
 /**
  *
  * @param {Uint8Array | Uint8ClampedArray} img1 - original image
  * @param {Uint8Array | Uint8ClampedArray} img2 - image to compare
  * @param {number} posImg1 - pixel position on `img1`
  * @param {number} posImg2 - pixel position on `img2`
- * @param {"YIQ"|"CIEDE2000"|"RGB"|"RieRGB"|"Brightness"} algorithm - algorithm used to calculate delta defaults to CIEDE2000
+ * @param {Algorithm} algorithm - algorithm used to calculate delta defaults to CIEDE2000
  * @returns {colorDelta} color delta result
  */
 export function colorDeltaImgPosition (img1, img2, posImg1, posImg2, algorithm) {
@@ -46,7 +49,7 @@ export function colorDeltaImgPosition (img1, img2, posImg1, posImg2, algorithm) 
  * @param {number} g2 - color 2 rgba green value
  * @param {number} b2 - color 2 rgba blue value
  * @param {number} a2 - color 2 rgba alpha value
- * @param {"YIQ"|"CIEDE2000"|"RGB"|"RieRGB"|"Brightness"} algorithm - algorithm used to calculate delta defaults to CIEDE2000
+ * @param {Algorithm} algorithm - algorithm used to calculate delta defaults to CIEDE2000
  * @returns {colorDelta} color delta result
  */
 export function colorDelta (r1, g1, b1, a1, r2, g2, b2, a2, algorithm) {
