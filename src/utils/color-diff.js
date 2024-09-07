@@ -39,6 +39,13 @@ export function getNormalizedDiffs ({ img1, img2, width, height, algorithm = 'CI
 }
 
 /**
+ * Gets antialias map for non-identical pixels
+ *
+ * The result is an byte array, where 3 out of 8 bits are used ( e.g. 1100001 )
+ * first bit just tells if it was worked on, useful when calculating partial antialias map and recalculate again
+ * second bit just tells if it was calculated or ignored, no antialias is calculated on identical pixels
+ * last bit tells if the pixel is an antialias pixel
+ *
  * @param {object} params - function parameters
  * @param {Uint8Array | Uint8ClampedArray} params.img1 - original image
  * @param {Uint8Array | Uint8ClampedArray} params.img2 - image to compare
@@ -46,16 +53,23 @@ export function getNormalizedDiffs ({ img1, img2, width, height, algorithm = 'CI
  * @param {number} params.height - images height
  * @returns {Uint8Array} anti alias map
  */
-export function getAntialiasMap (params) {
+export function getAntiAliasMap (params) {
   validateImagePreconditions(params)
   const { img1, img2, width, height } = params
   const len = width * height
   const antiAliasMap = new Uint8Array(len)
+  const a32 = new Uint32Array(img1.buffer, img1.byteOffset, len)
+  const b32 = new Uint32Array(img2.buffer, img2.byteOffset, len)
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      if (antialiased(img1, x, y, width, height, img2) || antialiased(img2, x, y, width, height, img1)) {
-        antiAliasMap[y * width + x] = 1
+      const pos = y * width + x
+      if (a32[pos] === b32[pos]) { // Fast way to check if pixels are identical
+        antiAliasMap[pos] = 0b1000_0000
+      } else if (antialiased(img1, x, y, width, height, img2) || antialiased(img2, x, y, width, height, img1)) {
+        antiAliasMap[pos] = 0b1100_0001
+      } else {
+        antiAliasMap[pos] = 0b1100_0000
       }
     }
   }
@@ -107,6 +121,8 @@ export function calculateDiff ({
     }
   }
 
+  const antiAliasMap = antialias ? getAntiAliasMap({ img1, img2, width, height }) : null
+
   const [aaR, aaG, aaB] = colorOrFallbackColorToRGBA(aaColor, fallbackAAColor)
   const [diffR, diffG, diffB] = colorOrFallbackColorToRGBA(diffColor, fallbackDiffColor)
   let diffPixelAmount = 0
@@ -122,7 +138,7 @@ export function calculateDiff ({
       // the color difference is above the threshold
       if (normalizedDelta > threshold) {
         // check it's a real rendering difference or just anti-aliasing
-        if (antialias && (antialiased(img1, x, y, width, height, img2) || antialiased(img2, x, y, width, height, img1))) {
+        if (antiAliasMap && (antiAliasMap[y * width + x] & 1) === 1) {
           // one of the pixels is anti-aliasing; draw as yellow and do not count as difference
           if (antialiasOutput) drawPixel(antialiasOutput, pos, aaR, aaG, aaB)
           aaPixelAmount++
