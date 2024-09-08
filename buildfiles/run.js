@@ -162,8 +162,8 @@ async function execTests () {
   const COVERAGE_BACKUP_DIR = 'reports/coverage.bak'
 
   const COVERAGE_REPORTERS = '--reporter json-summary --reporter html --reporter lcov '
-  const UNIT_COVERAGE_INCLUDES = '--include "src/**/*.{js,ts}" --exclude "src/**/*.{test,spec}.{js,ts}" --exclude="src/entrypoint/node.js"'
-  const UI_COVERAGE_INCLUDES = '--include build/docs/dist/qrcode.element.min.js'
+  const UNIT_COVERAGE_INCLUDES = '--include "src/**/*.{js,ts}" --exclude "src/**/*.{test,spec,d}.{js,ts}" --exclude="src/entrypoint/node.js"'
+  const UI_COVERAGE_INCLUDES = '--include build/docs/dist/image-comparison.element.min.js'
 
   logStartStage('test', 'run tests')
 
