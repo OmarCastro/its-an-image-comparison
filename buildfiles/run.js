@@ -285,7 +285,7 @@ async function buildTest () {
   await writeFile('reports/module-graph.svg', svg)
   logStage('build test page html')
 
-  // await exec(`${process.argv[0]} buildfiles/scripts/build-html.js test-page.html`)
+  await exec(`${process.argv[0]} buildfiles/scripts/build-html.js test-page.html`)
 
   logEndStage()
 }
