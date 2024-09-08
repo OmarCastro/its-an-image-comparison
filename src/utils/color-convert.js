@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-/** @import { rgbcolor, labcolor, xyzcolor} from './color-types' */
+/** @import { rgbcolor, labcolor, xyzcolor} from './color-types.d' */
 
 const pow = Math.pow
 
