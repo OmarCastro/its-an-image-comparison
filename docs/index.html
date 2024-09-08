@@ -36,7 +36,7 @@
                 <img src="reports/test-results/test-results-badge-a11y.svg" ss:size ss:badge-attrs="-title"></img>
             </a>
             <a href="reports/coverage/final" title="Show test code coverage information" ss:aria-label>
-                <img src="reports/coverage/unit/coverage-badge-a11y.svg" ss:size ss:badge-attrs="-title"></img>
+                <img src="reports/coverage/final/coverage-badge-a11y.svg" ss:size ss:badge-attrs="-title"></img>
             </a>
             <a href="https://github.com/OmarCastro/its-an-image-comparison" title="View code repository" ss:aria-label>
             </a>
@@ -57,6 +57,18 @@
                 <script type="text/plain" class="html-example"><{{elementName}}>
                     <img src="assets/image-1.png">
                     <img src="assets/image-2.png">
+                </{{elementName}}></script>
+            </div>
+
+            <div class="example example--antialias">
+                <h3> With opacity </h3>
+                <image-comparison data-antialias>
+                    <img src="assets/Gartus-glass-ball-1.svg">
+                    <img src="assets/Gartus-glass-ball-2.svg">
+                </image-comparison>
+                <script type="text/plain" class="html-example"><{{elementName}} data-antialias>
+                    <img src="assets/Gartus-glass-ball-1.svg">
+                    <img src="assets/Gartus-glass-ball-2.svg">
                 </{{elementName}}></script>
             </div>
 
