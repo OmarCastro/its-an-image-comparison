@@ -298,7 +298,7 @@ async function buildDocs () {
 
   const buildPath = 'build'
   const docsPath = `${buildPath}/docs`
-  await cp_R('docs/assets', `${docsPath}/assets`)
+  await cp_R('docs/assets', `${docsPath}`)
 
   /**
    * Builds documentation specific JS code
