@@ -62,24 +62,39 @@ export function colorDelta (r1, g1, b1, a1, r2, g2, b2, a2, algorithm) {
     }
   }
 
-  if (a1 < 255) {
-    ({ R: r1, G: g1, B: b1 } = colorBlend(r1, g1, b1, a1, 255, 255, 255))
-  }
-
-  if (a2 < 255) {
-    ({ R: r2, G: g2, B: b2 } = colorBlend(r1, g1, b1, a1, 255, 255, 255))
-  }
-
-  const delta = rounded((() => {
+  const algorithmFunction = (() => {
     switch (algorithm) {
-      case 'YIQ': return distYIQ(r1, g1, b1, r2, g2, b2)
-      case 'RGB': return distRGB(r1, g1, b1, r2, g2, b2)
-      case 'RieRGB': return distRieRGB(r1, g1, b1, r2, g2, b2)
-      case 'Brightness': return distYIQBrightness(r1, g1, b1, r2, g2, b2)
+      case 'YIQ': return distYIQ
+      case 'RGB': return distRGB
+      case 'RieRGB': return distRieRGB
+      case 'Brightness': return distYIQBrightness
       case 'CIEDE2000':
-      default: return distCIEDE2000(r1, g1, b1, r2, g2, b2)
+      default: return distCIEDE2000
     }
-  })())
+  })()
+
+  if (a1 < 255 || a2 < 255) {
+    const rgb1Light = colorBlend(r1, g1, b1, a1, 255, 255, 255)
+    const rgb2Light = colorBlend(r2, g2, b2, a2, 255, 255, 255)
+    const deltaLightBlend = rounded(algorithmFunction(
+      rgb1Light.R, rgb1Light.G, rgb1Light.B,
+      rgb2Light.R, rgb2Light.G, rgb2Light.B
+    ))
+
+    const rgb1Dark = colorBlend(r1, g1, b1, a1, 0, 0, 0)
+    const rgb2Dark = colorBlend(r2, g2, b2, a2, 0, 0, 0)
+    const deltaDarkBlend = rounded(algorithmFunction(
+      rgb1Dark.R, rgb1Dark.G, rgb1Dark.B,
+      rgb2Dark.R, rgb2Dark.G, rgb2Dark.B
+    ))
+
+    return {
+      delta: Math.max(deltaLightBlend, deltaDarkBlend),
+      maxDelta: maxDelta[algorithm],
+    }
+  }
+
+  const delta = rounded(algorithmFunction(r1, g1, b1, r2, g2, b2))
   return {
     delta,
     maxDelta: maxDelta[algorithm],
