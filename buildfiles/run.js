@@ -286,6 +286,7 @@ async function buildTest () {
   logStage('build test page html')
 
   await exec(`${process.argv[0]} buildfiles/scripts/build-html.js test-page.html`)
+  await cp_R('docs/assets', `${docsPath}`)
 
   logEndStage()
 }
@@ -298,7 +299,6 @@ async function buildDocs () {
 
   const buildPath = 'build'
   const docsPath = `${buildPath}/docs`
-  await cp_R('docs/assets', `${docsPath}`)
 
   /**
    * Builds documentation specific JS code
