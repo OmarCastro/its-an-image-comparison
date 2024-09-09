@@ -1,5 +1,5 @@
 import { test } from '../../test-utils/unit/test.util.js'
-import { colorDelta } from './color-delta.js'
+import { colorDelta, maxDelta } from './color-delta.js'
 
 test('max color delta CIEDE2000', ({ expect }) => {
   expect(colorDelta(0, 0, 0, 255, 255, 255, 255, 255, "CIEDE2000")).toEqual({
@@ -34,6 +34,30 @@ test('max color delta Brightness', ({ expect }) => {
     maxDelta: 255,
     delta: -255,
   })
+})
+
+test('same color should return 0 delta value', ({ expect }) => {  
+  const result = Object.fromEntries(Object.keys(maxDelta).map(
+    algoritm => [algoritm, colorDelta(255, 255, 255, 255, 255, 255, 255, 255, algoritm)]
+  ))
+
+  const expected = Object.fromEntries(Object.entries(maxDelta).map(
+    ([algoritm, maxDelta]) => [algoritm, {delta: 0, maxDelta}]
+  ))
+
+  expect(result).toEqual(expected)
+})
+
+test('invalid algorithm defaults to CIEDE2000', ({ expect }) => {
+  const expectedResult = {
+    maxDelta: 100,
+    delta: 100,
+  }
+
+  expect(colorDelta(0, 0, 0, 255, 255, 255, 255, 255, null)).toEqual(expectedResult)
+  expect(colorDelta(0, 0, 0, 255, 255, 255, 255, 255, "invalid")).toEqual(expectedResult)
+  expect(colorDelta(0, 0, 0, 255, 255, 255, 255, 255, 1)).toEqual(expectedResult)
+  expect(colorDelta(0, 0, 0, 255, 255, 255, 255, 255, "3")).toEqual(expectedResult)
 })
 
 
