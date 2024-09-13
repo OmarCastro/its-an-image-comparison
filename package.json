@@ -1,7 +1,8 @@
 {
   "name": "its-an-image-comparison",
-  "version": "0.1.0",
-  "description": "An i18n web component",
+  "version": "0.2.0",
+  "description": "An image comparison web component",
+  "main": "dist/esm/entrypoint/node.js",
   "type": "module",
   "scripts": {
     "build": "node ./buildfiles/run.js build",

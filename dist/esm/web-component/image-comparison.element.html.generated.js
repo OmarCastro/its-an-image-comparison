@@ -1,5 +1,0 @@
-// generated code from src/web-component/image-comparison.element.html
-var stdin_default = '<html><head></head><body><div class="container"> <ul class="tab-list"> <li><label> <input type="radio" name="tab" value="side-by-side" checked=""> side by side </label></li> <li><label> <input type="radio" name="tab" value="slider"> slider </label></li> <li><label> <input type="radio" name="tab" value="diff"> pixel difference </label></li> </ul> <div class="tab side-by-side"> <figure> <img class="left-side"> <figcaption class="caption--left-side"></figcaption> </figure> <figure> <img class="right-side"> <figcaption class="caption--right-side"></figcaption> </figure> </div> <div class="tab slider"> <div class="comparison-slider"> <div class="overlay caption--right-side"></div> <img class="right-side"> <div class="resize"> <div class="overlay caption--left-side"></div> <img class="left-side"> </div> <div class="divider"></div> </div> </div> <div class="tab diff"> <canvas class="diff-image"></canvas> </div>\n</div>\n</body></html>';
-export {
-  stdin_default as default
-};
