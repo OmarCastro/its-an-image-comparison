@@ -853,19 +853,26 @@ async function getFilesAsArray (dir) {
  * @returns {AsyncGenerator<Promise<{filenames: string[]}>>} iterator of changed filenames
  */
 async function * watchDirs (...dirs) {
-  const { watch } = await import('chokidar')
+  const { watch } = await import('node:fs')
   const nothingResolver = () => {}
   let currentResolver = nothingResolver
   let batch = []
   console.log(`watching ${dirs}`)
-  watch(dirs).on('change', (filename) => {
+
+  /** @type {import('node:fs').WatchListener<string>} */
+  const handler = (eventType, filename) => {
+    if (eventType !== 'change' || filename == null) { return }
     batch.push(filename)
     if (currentResolver !== nothingResolver) {
       currentResolver({ filenames: batch })
       batch = []
       currentResolver = nothingResolver
     }
-  })
+  }
+  for (const dir of dirs) {
+    watch(dir, { recursive: true }, handler)
+  }
+
   while (true) {
     yield new Promise(resolve => {
       if (batch.length > 0) {
