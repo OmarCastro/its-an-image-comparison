@@ -29,7 +29,7 @@
 
 
         <section class="section section--badge">
-            <a href="https://github.com/OmarCastro/its-a-qrcode" title="View code repository" ss:aria-label>
+            <a href="https://github.com/OmarCastro/its-an-image-comparison" title="View code repository" ss:aria-label>
                 <img src="reports/repo-badge-a11y.svg" ss:size ss:badge-attrs="-title"></img>
             </a>
             <a href="https://github.com/OmarCastro/its-an-image-comparison/blob/master/LICENSE" title="View license on repository" ss:aria-label>
@@ -42,8 +42,40 @@
                 <img src="reports/coverage/final/coverage-badge-a11y.svg" ss:size ss:badge-attrs="-title"></img>
             </a>
             <a href="https://github.com/OmarCastro/its-an-image-comparison/releases/latest" title="View release notes" ss:aria-label>
+                <picture>
+                    <source srcset="https://img.shields.io/github/v/release/OmarCastro/its-an-image-comparison?style=for-the-badge&logo=github&logoColor=%23ccc&color=%2306A" media="(prefers-color-scheme: dark)"> 
+                    <img src="https://img.shields.io/github/v/release/OmarCastro/its-an-image-comparison?style=for-the-badge&logo=github&logoColor=%23333&labelColor=%23ccc">
+                  </picture>
+            </a>
+            <a href="https://www.npmjs.com/package/its-an-image-comparison" title="View NPM package" ss:aria-label>
+                <picture>
+                    <source srcset="https://img.shields.io/npm/v/its-an-image-comparison?style=for-the-badge&logo=npm&logoColor=%23ccc&color=%2306A" media="(prefers-color-scheme: dark)"> 
+                    <img src="https://img.shields.io/npm/v/its-an-image-comparison?style=for-the-badge&logo=npm&logoColor=%23333&labelColor=%23ccc&color=%23007ec6">
+                </picture>
             </a>
 
+        </section>
+
+        <section class="section section--getting-started" ss:markdown>
+            ## Getting started
+            
+            ### CDN
+
+            To use a CDN all you need is to add the following code in the HTML page:
+
+            <pre><code class="language-markup keep-markup">&lt;script type="module" src="https://cdn.jsdelivr.net/gh/OmarCastro/its-an-image-comparison@0.1.0/dist/image-comparison.element.min.js?named=<span class="component-name-edit" contenteditable="true">image-comparison</span>">&lt;/script></code></pre>
+
+            ### NPM
+
+            If you wish to import from npm and use a bundler, you can install the `its-an-image-comparison` package
+
+            <pre><code class="language-shell keep-markup">npm install its-an-image-comparison</code></pre>
+
+            Not all bundlers support query strings, it is recommended to import and register the component, like the following code:
+
+            <pre><code class="language-js keep-markup">import element from 'its-an-image-comparison'
+
+            customElements.define('<span class="component-name-edit" contenteditable="true">qr-code</span>', element)</code></pre>
         </section>
 
         <section class="section section--examples">
