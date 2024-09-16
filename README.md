@@ -1,4 +1,4 @@
-# It's a QR Code
+# It's an image comparison
 <a href="https://www.npmjs.com/package/its-an-image-comparison" aria-label="go to NPM package" title="go to NPM package">
     <picture>
         <source srcset="https://img.shields.io/npm/v/its-an-image-comparison?style=for-the-badge&logo=npm&logoColor=%23ccc&color=%2306A" media="(prefers-color-scheme: dark)"> 
@@ -29,6 +29,35 @@
 </a>
 
 
-"It's a QR Code" is a web component that shows its text content as QR code image
+"It's an image comparison" is a web component that compares 2 images
 
-full documentation on: https://omarcastro.github.io/its-an-image-comparison
+## Getting started 
+
+### CDN
+
+To use a CDN all you need is to add the following code in the HTML page:
+
+```html
+<script type="module" src="https://cdn.jsdelivr.net/gh/OmarCastro/its-an-image-comparison@0.1.0/dist/image-comparison.element.min.js?named=image-comparison"></script>
+```
+
+
+### NPM
+
+If you wish to import from npm and use a bundler, you can install the `its-an-image-comparison` package
+
+```bash
+npm install its-an-image-comparison
+```
+
+Not all bundlers support query strings, it is recommended to import and register the component, like the following code:
+
+```js
+import element from 'its-an-image-comparison'
+customElements.define('image-comparison', element)
+```
+
+
+## Documentation
+
+This project uses Github page to show the documentation, it is in https://omarcastro.github.io/its-an-image-comparison
