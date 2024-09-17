@@ -1,15 +1,11 @@
 # It's an image comparison
-<a href="https://www.npmjs.com/package/its-an-image-comparison" aria-label="go to NPM package" title="go to NPM package">
-    <img src="https://omarcastro.github.io/its-an-image-comparison/reports/npm-version-badge-a11y.svg"></img>
-</a><a href="https://github.com/OmarCastro/its-an-image-comparison/releases/latest" aria-label="go to release page" title="go to release page">
-    <img src="https://omarcastro.github.io/its-an-image-comparison/reports/repo-release-a11y.svg"></img>
-</a><a href="https://github.com/OmarCastro/its-an-image-comparison" aria-label="go to Github repository" title="go to Github repository">
-    <img src="https://omarcastro.github.io/its-an-image-comparison/reports/license-badge-a11y.svg">
-</a><a href="https://omarcastro.github.io/its-an-image-comparison/reports/playwright-report" aria-label="Show test results">
-    <img src="https://omarcastro.github.io/its-an-image-comparison/reports/test-results/test-results-badge-a11y.svg">
-</a><a href="https://omarcastro.github.io/its-an-image-comparison/reports/coverage/final" aria-label="Show test code coverage information">
-    <img src="https://omarcastro.github.io/its-an-image-comparison/reports/coverage/final/coverage-badge-a11y.svg">
-</a>
+
+[![npm version](https://omarcastro.github.io/its-an-image-comparison/reports/npm-version-badge-a11y.svg)](https://www.npmjs.com/package/its-an-image-comparison)
+[![latest version](https://omarcastro.github.io/its-an-image-comparison/reports/repo-release-a11y.svg)](https://github.com/OmarCastro/its-an-image-comparison/releases/latest)
+[![License](https://omarcastro.github.io/its-an-image-comparison/reports/license-badge-a11y.svg)](https://github.com/OmarCastro/its-an-image-comparison/blob/main/LICENSE)
+[![Continuous Integration Test Report](https://omarcastro.github.io/its-an-image-comparison/reports/test-results/test-results-badge-a11y.svg)](https://omarcastro.github.io/its-an-image-comparison/reports/playwright-report)
+[![Test Coverage Report](https://omarcastro.github.io/its-an-image-comparison/reports/coverage/final/coverage-badge-a11y.svg)](https://omarcastro.github.io/its-an-image-comparison/reports/coverage/final)
+
 
 "It's an image comparison" is a web component that compares 2 images
 
