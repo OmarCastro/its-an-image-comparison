@@ -13,9 +13,10 @@ To help navigate this file is divided by sections:
 @section 8 exec utilities
 @section 9 filesystem utilities
 @section 10 npm utilities
-@section 11 badge utilities
-@section 12 module graph utilities
-@section 13 build tools plugins
+@section 11 versioning utilities
+@section 12 badge utilities
+@section 13 module graph utilities
+@section 14 build tools plugins
 */
 import process from 'node:process'
 import fs, { readFile as fsReadFile, writeFile } from 'node:fs/promises'
@@ -200,6 +201,7 @@ async function execTests () {
     makeBadgeForLicense(pathFromProject('reports')),
     makeBadgeForNPMVersion(pathFromProject('reports')),
     makeBadgeForRepo(pathFromProject('reports')),
+    makeBadgeForRelease(pathFromProject('reports')),
     ...(uiTestsExecuted ? [makeBadgeForCoverages(pathFromProject('reports/coverage/ui'))] : []),
   ])
 
@@ -949,21 +951,49 @@ async function readPackageJson () {
   return await readFile(pathFromProject('package.json')).then(str => JSON.parse(str))
 }
 
-// @section 11 badge utilities
+// @section 11 versioning utilities
+
+async function getLatestReleasedVersion () {
+  const changelogContent = await readFile(pathFromProject('CHANGELOG'))
+  const versions = changelogContent.split('\n')
+    .map(line => {
+      const match = line.match(/^## \[([0-9]+\.[[0-9]+\.[[0-9]+)]\s+-\s+([^\s]+)/)
+      if (!match) {
+        return null
+      }
+      return { version: match[1], releaseDate: match[2] }
+    }).filter(version => !!version)
+  const releasedVersions = versions.filter(version => {
+    return version.releaseDate.match(/[0-9]{4}-[0-9]{2}-[0-9]{2}/)
+  })
+  return releasedVersions[0]
+}
+
+// @section 12 badge utilities
 
 function getBadgeColors () {
   getBadgeColors.cache ??= {
-    green: '#007700',
+    green: '#060',
     yellow: '#777700',
     orange: '#aa0000',
     red: '#aa0000',
-    blue: '#007ec6',
+    blue: '#05a',
   }
   return getBadgeColors.cache
 }
 
+function svgToDataURI (svg) {
+  const svgURI = svg
+    .replaceAll('<', '%3C')
+    .replaceAll('>', '%3E')
+    .replaceAll('{', '%7B')
+    .replaceAll('}', '%7D')
+    .replaceAll('#', '%23')
+  return `data:image/svg+xml,${svgURI}`
+}
+
 function asciiIconSvg (asciicode) {
-  return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cstyle%3Etext %7Bfont-size: 10px; fill: %23333;%7D @media (prefers-color-scheme: dark) %7Btext %7B fill: %23ccc; %7D%7D %3C/style%3E%3Ctext x='0' y='10'%3E${asciicode}%3C/text%3E%3C/svg%3E`
+  return svgToDataURI(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'><style>text {font-size: 10px; fill: #333;} @media (prefers-color-scheme: dark) {text { fill: #ccc; }} </style><text x='0' y='10'>${asciicode}</text></svg>`)
 }
 
 async function makeBadge (params) {
@@ -1006,7 +1036,7 @@ async function svgStyle () {
   @media (prefers-color-scheme: dark) {
     text { fill: #fff; }
     .icon {fill: #ccc; }
-    rect.label { fill: #555; stroke: none; }
+    rect.label { fill: #4a4a4a; stroke: none; }
     rect.body { fill: var(--dark-fill); }
   }
   `.replaceAll(/\n+\s*/g, '')
@@ -1072,10 +1102,11 @@ async function makeBadgeForTestResult (path) {
   const testAmount = tests.length
   const passedAmount = passedTests.length
   const passed = passedAmount === testAmount
+  const { green, red } = getBadgeColors()
   const svg = await makeBadge({
     label: 'tests',
     message: `${passedAmount} / ${testAmount}`,
-    color: passed ? '#007700' : '#aa0000',
+    color: passed ? green : red,
     logo: asciiIconSvg('✔'),
     logoWidth: 16,
   })
@@ -1090,7 +1121,7 @@ async function makeBadgeForLicense (path) {
   const svg = await makeBadge({
     label: ' license',
     message: pkg.license,
-    color: '#007700',
+    color: getBadgeColors().green,
     logo: asciiIconSvg('🏛'),
   })
 
@@ -1102,10 +1133,13 @@ async function makeBadgeForLicense (path) {
 async function makeBadgeForNPMVersion (path) {
   const version = await getLatestPublishedVersion()
 
+  const npmIconSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 21 21"><style>g {fill: #333;stroke:#333;} @media (prefers-color-scheme: dark) {g { fill: #ccc;stroke:#ccc; }} </style><g><rect x="2" y="2" width="17" height="17" fill="transparent" stroke-width="4"/><rect x="10" y="7" width="4" height="11" stroke-width="0"/></g></svg>'
+
   const svg = await makeBadge({
     label: 'npm',
     message: version,
-    color: '#007ec6',
+    color: getBadgeColors().blue,
+    logo: svgToDataURI(npmIconSvg),
   })
 
   const badgeWrite = writeFile(`${path}/npm-version-badge.svg`, svg)
@@ -1125,6 +1159,19 @@ async function makeBadgeForRepo (path) {
   await Promise.all([badgeWrite, a11yBadgeWrite])
 }
 
+async function makeBadgeForRelease (path) {
+  const releaseVersion = await getLatestReleasedVersion()
+  const svg = await makeBadge({
+    label: 'Release',
+    message: releaseVersion ? releaseVersion.version : 'Unreleased',
+    color: getBadgeColors().blue,
+    logo: asciiIconSvg('⛴'),
+  })
+  const badgeWrite = writeFile(`${path}/repo-release.svg`, svg)
+  const a11yBadgeWrite = writeFile(`${path}/repo-release-a11y.svg`, await applyA11yTheme(svg, { replaceIconToText: '⛴' }))
+  await Promise.all([badgeWrite, a11yBadgeWrite])
+}
+
 async function loadDom () {
   if (!loadDom.cache) {
     loadDom.cache = import('jsdom').then(({ JSDOM }) => {
@@ -1139,7 +1186,7 @@ async function loadDom () {
   return loadDom.cache
 }
 
-// @section 12 module graph utilities
+// @section 13 module graph utilities
 
 async function createModuleGraphSvg (moduleGrapnJson) {
   const { default: { graphlib, layout } } = await import('@dagrejs/dagre')
@@ -1224,7 +1271,7 @@ async function createModuleGraphSvg (moduleGrapnJson) {
   </svg>`
 }
 
-// @section 13 build tools plugins
+// @section 14 build tools plugins
 
 /**
  * @returns {Promise<import('esbuild').Plugin>} - esbuild plugin
