@@ -16,9 +16,10 @@
 To use a CDN all you need is to add the following code in the HTML page:
 
 ```html
-<script type="module" src="https://cdn.jsdelivr.net/gh/OmarCastro/its-an-image-comparison@0.1.0/dist/image-comparison.element.min.js?named=image-comparison"></script>
+<script type="module" src="https://cdn.jsdelivr.net/gh/OmarCastro/its-an-image-comparison/dist/image-comparison.element.min.js?named=image-comparison"></script>
 ```
 
+The query string `named` automatically registers the component with the value defined
 
 ### NPM
 
