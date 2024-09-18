@@ -89,14 +89,18 @@ export class ImageComparisonElement extends HTMLElement {
   updateCanvas () {
     const { shadowRoot } = this
     if (!shadowRoot) { return }
+    const leftImage = shadowRoot.querySelector(leftImgSelector)
+    const rightImage = shadowRoot.querySelector(rightImgSelector)
+
+    if (!isLoadedImg(leftImage) || !isLoadedImg(rightImage)) {
+      return
+    }
+
+    shadowRoot.querySelectorAll('div.comparison-slider').forEach(slider => {
+      slider.style.width = `${leftImage.naturalWidth}px`
+    })
+
     shadowRoot.querySelectorAll('canvas.diff-image').forEach(canvas => {
-      const leftImage = shadowRoot.querySelector(leftImgSelector)
-      const rightImage = shadowRoot.querySelector(rightImgSelector)
-
-      if (!isLoadedImg(leftImage) || !isLoadedImg(rightImage)) {
-        return
-      }
-
       const width = leftImage.naturalWidth
       const height = leftImage.naturalHeight
       canvas.width = width

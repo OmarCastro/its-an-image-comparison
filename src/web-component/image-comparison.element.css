@@ -35,7 +35,7 @@
     list-style-type: none;
 
     display: flex;
-    justify-content: space-around;
+    justify-content: center;
     label {
         padding: 1em;
         width: 30%;
@@ -55,11 +55,13 @@
 .container:has(.tab-list input[value="side-by-side"]:checked) > .tab.side-by-side {
     display: flex;
     gap: 10px;
+    justify-content: space-around;
 }
 
-.container:has(.tab-list input[value="slider"]:checked) > .tab.slider,
+.container:has(.tab-list input[value="slider"]:checked) > .tab.slider ,
 .container:has(.tab-list input[value="diff"]:checked)  > .tab.diff {
-    display: block;
+    display: flex;
+    justify-content: center;
 }
 
 .tab.side-by-side > figure {
@@ -70,13 +72,9 @@
     text-align: center;
 }
 
-canvas {
-    width: 100%;
-}
-
 .comparison-slider {
     position: relative;
-    width: 100%;
+    max-width: 100%;
     margin: 0;
     border: 5px white solid;
     box-sizing: border-box;
