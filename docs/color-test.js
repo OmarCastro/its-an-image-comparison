@@ -1,4 +1,5 @@
 import { colorDelta } from '../src/utils/color-delta.js'
+/** @import {rgbcolor} from '../src/utils/color-types.d.js' */
 
 document.querySelectorAll('.rgb-test').forEach(testEl => {
   const block1 = testEl.querySelector(':scope > div.rgb-block-1')
@@ -9,20 +10,19 @@ document.querySelectorAll('.rgb-test').forEach(testEl => {
   console.log(rgb1)
   console.log(rgb2)
 
-  calculateDelta(testEl.querySelector('.result-YIQ-b1-b2'), rgb1, rgb2, 'YIQ')
-  calculateDelta(testEl.querySelector('.result-YIQ-b2-b1'), rgb2, rgb1, 'YIQ')
-  calculateDelta(testEl.querySelector('.result-CIEDE-b1-b2'), rgb2, rgb1, 'CIEDE2000')
-  calculateDelta(testEl.querySelector('.result-CIEDE-b2-b1'), rgb2, rgb1, 'CIEDE2000')
+  calculateDelta(rgb1, rgb2, 'YIQ', testEl.querySelector('.result-YIQ-b1-b2'))
+  calculateDelta(rgb2, rgb1, 'YIQ', testEl.querySelector('.result-YIQ-b2-b1'))
+  calculateDelta(rgb2, rgb1, 'CIEDE2000', testEl.querySelector('.result-CIEDE-b1-b2'))
+  calculateDelta(rgb2, rgb1, 'CIEDE2000', testEl.querySelector('.result-CIEDE-b2-b1'))
 })
 
 /**
- *
- * @param {Element} locationResult
- * @param {*} rgb1
- * @param {*} rgb2
- * @param {Parameters<typeof colorDelta>[8]} algorithm
+ * @param {rgbcolor} rgb1 - first target color
+ * @param {rgbcolor} rgb2 - second target color
+ * @param {Parameters<typeof colorDelta>[8]} algorithm - algorithm to use
+ *  @param {Element} locationResult - location where to put the result
  */
-function calculateDelta (locationResult, rgb1, rgb2, algorithm) {
+function calculateDelta (rgb1, rgb2, algorithm, locationResult) {
   if (!locationResult) { return }
   const delta = colorDelta(rgb1.r, rgb1.g, rgb1.b, 255, rgb2.r, rgb2.g, rgb2.b, 255, algorithm)
   const result = {

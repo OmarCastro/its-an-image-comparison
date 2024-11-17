@@ -34,7 +34,7 @@ const projectPath = new URL('../../', import.meta.url)
 const docsPath = new URL('docs', projectPath).pathname
 const docsOutputPath = new URL('build/docs', projectPath).pathname
 
-const fs = await import('fs')
+const fs = await import('node:fs')
 
 const filePath = existsSync(`${docsPath}/${process.argv[2]}`) ? `${docsPath}/${process.argv[2]}` : `${docsOutputPath}/${process.argv[2]}`
 const data = fs.readFileSync(filePath, 'utf8')
@@ -81,8 +81,6 @@ const readFileImport = (file) => {
   ].map(loc => ' - ' + loc).join('\n')
   throw Error(`could not import file: file not found. \nhref: ${file}\nfile path: ${filePath} \nLocations seached \n${seachedLocations}`)
 }
-
-const promises = []
 
 /**
  * @param {Element} element
@@ -199,36 +197,33 @@ queryAll('img[ss:size]').forEach(element => {
   element.setAttribute('height', `${size.height}`)
 })
 
-promises.push(...queryAll('img[ss:badge-attrs]').map(async (element) => {
+const ssBadgeAttributesTasks = queryAll('img[ss:badge-attrs]').map(async (element) => {
   const imageSrc = element.getAttribute('src')
   const svgText = await readFile(`${docsOutputPath}/${imageSrc}`, 'utf8')
   const div = document.createElement('div')
   div.innerHTML = svgText
+  element.removeAttribute('ss:badge-attrs')
   const svg = div.querySelector('svg')
   if (!svg) { throw Error(`${docsOutputPath}/${imageSrc} is not a valid svg`) }
 
-  if (!element.hasAttribute('alt') && !element.matches('[ss:badge-attrs~=-alt]')) {
-    const alt = svg.getAttribute('aria-label')
-    if (alt) { element.setAttribute('alt', alt) }
-  }
+  const alt = svg.getAttribute('aria-label')
+  if (alt) { element.setAttribute('alt', alt) }
 
-  if (!element.hasAttribute('title') && !element.matches('[ss:badge-attrs~=-title]')) {
-    const title = svg.querySelector('title')?.textContent
-    if (title) { element.setAttribute('title', title) }
-  }
-}))
+  const title = svg.querySelector('title')?.textContent
+  if (title) { element.setAttribute('title', title) }
+})
 
-promises.push(...queryAll('style').map(async element => {
+const minifyStylesTasks = queryAll('style').map(async element => {
   element.innerHTML = await minifyCss(element.innerHTML)
-}))
+})
 
-promises.push(...queryAll('link[href][rel="stylesheet"][ss:inline]').map(async element => {
+const inlineCSSTasks = queryAll('link[href][rel="stylesheet"][ss:inline]').map(async element => {
   const href = element.getAttribute('href')
   const cssText = readFileImport(href)
   element.outerHTML = `<style>${await minifyCss(cssText)}</style>`
-}))
+})
 
-promises.push(...queryAll('link[href][ss:repeat-glob]').map(async (element) => {
+const repeatGlobLinksTask = queryAll('link[href][ss:repeat-glob]').map(async (element) => {
   const href = element.getAttribute('href')
   if (!href) { return }
   for await (const filename of getFiles(docsOutputPath)) {
@@ -238,11 +233,19 @@ promises.push(...queryAll('link[href][ss:repeat-glob]').map(async (element) => {
     for (const { name, value } of element.attributes) {
       link.setAttribute(name, value)
     }
+    link.removeAttribute('ss:repeat-glob')
     link.setAttribute('href', filename)
-    element.insertAdjacentElement('afterend', link)
+    element.after(link)
   }
   element.remove()
-}))
+})
+
+await Promise.all([
+  ...ssBadgeAttributesTasks,
+  ...minifyStylesTasks,
+  ...inlineCSSTasks,
+  ...repeatGlobLinksTask
+])
 
 const tocUtils = {
   getOrCreateId: (element) => {
@@ -278,8 +281,6 @@ const tocUtils = {
   },
 }
 
-await Promise.all(promises)
-
 queryAll('[ss:toc]').forEach(element => {
   const ol = document.createElement('ol')
   /** @type {[HTMLElement, HTMLElement][]} */
@@ -305,7 +306,7 @@ fs.writeFileSync(`${docsOutputPath}/${process.argv[2]}`, minifiedHtml)
 function dedent (templateStrings, ...values) {
   const matches = []
   const strings = typeof templateStrings === 'string' ? [templateStrings] : templateStrings.slice()
-  strings[strings.length - 1] = strings[strings.length - 1].replace(/\r?\n([\t ]*)$/, '')
+  strings[strings.length - 1] = strings.at(-1).replace(/\r?\n([\t ]*)$/, '')
   for (const string of strings) {
     const match = string.match(/\n[\t ]+/g)
     match && matches.push(...match)

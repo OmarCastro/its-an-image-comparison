@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const html = el.innerHTML
     const lines = html.split('\n')
     const minSpaces = lines.filter((line) => line.trim() !== '').reduce((acc, line) => Math.min(line.search(/\S|$/), acc), Infinity)
-    el.innerHTML = lines.map((line) => line.substring(minSpaces)).join('\n').trim()
+    el.innerHTML = lines.map((line) => line.slice(minSpaces)).join('\n').trim()
   })
 })
 const getExampleColorWheel = (childNode) => childNode.closest('.example')?.querySelectorAll('color-wheel') ?? []

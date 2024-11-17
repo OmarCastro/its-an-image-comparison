@@ -2,6 +2,7 @@ import globals from 'globals'
 import neostandard from 'neostandard'
 import sonarjs from 'eslint-plugin-sonarjs'
 import jsdoc from 'eslint-plugin-jsdoc'
+import eslintPluginUnicorn from 'eslint-plugin-unicorn'
 
 export default [
   {
@@ -18,6 +19,9 @@ export default [
   jsdoc.configs['flat/recommended-typescript-flavor'],
   sonarjs.configs.recommended,
   {
+    plugins: {
+      unicorn: eslintPluginUnicorn,
+    },
     languageOptions: {
       globals: {
         ...globals.browser,
@@ -28,7 +32,13 @@ export default [
       sourceType: 'module',
     },
     rules: {
-
+      'unicorn/prefer-code-point': ['warn'],
+      'unicorn/prefer-string-slice': ['warn'],
+      'unicorn/prefer-at': ['warn'],
+      'unicorn/prefer-modern-dom-apis': ['warn'],
+      'unicorn/no-array-push-push': ['warn'],
+      'unicorn/prefer-node-protocol': ['error'],
+      'unicorn/prefer-array-find': ['error'],
       'jsdoc/valid-types': 0,
       'jsdoc/require-returns': ['warn', { publicOnly: true }],
       'sonarjs/cognitive-complexity': ['error', 15],

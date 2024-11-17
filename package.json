@@ -32,6 +32,7 @@
     "eslint": "^9.15.0",
     "eslint-plugin-jsdoc": "^50.5.0",
     "eslint-plugin-sonarjs": "^1.0.4",
+    "eslint-plugin-unicorn": "^56.0.0",
     "expect": "^29.7.0",
     "image-size": "^1.1.1",
     "js-yaml": "^4.1.0",
