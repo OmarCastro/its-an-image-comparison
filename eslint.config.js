@@ -7,8 +7,6 @@ import eslintPluginUnicorn from 'eslint-plugin-unicorn'
 export default [
   {
     ignores: [
-      '**/*.spec.js',
-      '**/*.spec.ts',
       '**/*.min.js',
       '**/build',
       '**/node_modules',
@@ -45,5 +43,19 @@ export default [
       'max-lines-per-function': ['warn', 75],
       'jsdoc/tag-lines': ['error', 'any', { startLines: null }]
     },
+  }, {
+    files: [
+      '**/*.spec.js',
+      '**/*.spec.ts',
+    ],
+    rules: {
+      'jsdoc/require-param-description': 0,
+      'jsdoc/require-returns': 0,
+      'jsdoc/require-returns-description': 0,
+      '@cspell/spellchecker': 0,
+      'max-lines-per-function': 0,
+      'sonarjs/no-duplicate-string': 0,
+      'sonarjs/no-identical-functions': 0
+    }
   },
 ]
