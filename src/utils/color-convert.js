@@ -1,4 +1,3 @@
-/* eslint-disable camelcase */
 /** @import { rgbcolor, labcolor, xyzcolor} from './color-types.d' */
 
 const pow = Math.pow
@@ -8,8 +7,8 @@ const pow = Math.pow
  * @param {rgbcolor} c standard-RGB color to convert, should have fields R,G,B
  * @returns {labcolor} the color in the CIE L*a*b* color space
  */
-export function rgb_to_lab (c) {
-  return xyz_to_lab(rgb_to_xyz(c))
+export function rgbToLab (c) {
+  return xyzToLab(rgbToXyz(c))
 }
 
 /**
@@ -17,7 +16,7 @@ export function rgb_to_lab (c) {
  * @param {rgbcolor} c standard-RGB color to convert, should have fields R,G,B
  * @returns {xyzcolor} the color in the CIE 1931 XYZ color space
  */
-function rgb_to_xyz (c) {
+function rgbToXyz (c) {
   let R = (c.R / 255)
   let G = (c.G / 255)
   let B = (c.B / 255)
@@ -47,13 +46,13 @@ function rgb_to_xyz (c) {
  * @param {xyzcolor} c - the CIE 1931 XYZ color to convert which refers to the D65/2° standard illuminant, should have fields X,Y,Z
  * @returns {labcolor} the color in the CIE L*a*b* color space
  */
-export function xyz_to_lab (c) {
-  const ref_Y = 100.000
-  const ref_Z = 108.883
-  const ref_X = 95.047 // Observer= 2°, Illuminant= D65, @see Reference values in the table below
-  let Y = c.Y / ref_Y
-  let Z = c.Z / ref_Z
-  let X = c.X / ref_X
+export function xyzToLab (c) {
+  const refY = 100.000
+  const refZ = 108.883
+  const refX = 95.047 // Observer= 2°, Illuminant= D65, @see Reference values in the table below
+  let Y = c.Y / refY
+  let Z = c.Z / refZ
+  let X = c.X / refX
   if (X > 0.008856) X = pow(X, 1 / 3)
   else X = (7.787 * X) + (16 / 116)
   if (Y > 0.008856) Y = pow(Y, 1 / 3)

@@ -1,14 +1,14 @@
 import { test } from '../../test-utils/unit/test.util.js'
-import { rgb_to_lab as rgb2lab, xyz_to_lab as xyz2lab } from './color-convert.js'
+import { rgbToLab, xyzToLab } from './color-convert.js'
 
 test('rgb to lab', ({ expect }) => {
-  expect(rgb2lab({ R: 0, G: 0, B: 0 })).toEqual({ L: 0, a: 0, b: 0 })
-  expect(rgb2lab({ R: 255, G: 0, B: 0 })).toEqual({ L: 53.23288178584245, a: 80.10930952982204, b: 67.22006831026425 })
-  expect(rgb2lab({ R: 0, G: 255, B: 255 })).toEqual({ L: 91.11652110946342, a: -48.079618466228716, b: -14.138127754846131 })
+  expect(rgbToLab({ R: 0, G: 0, B: 0 })).toEqual({ L: 0, a: 0, b: 0 })
+  expect(rgbToLab({ R: 255, G: 0, B: 0 })).toEqual({ L: 53.23288178584245, a: 80.10930952982204, b: 67.22006831026425 })
+  expect(rgbToLab({ R: 0, G: 255, B: 255 })).toEqual({ L: 91.11652110946342, a: -48.079618466228716, b: -14.138127754846131 })
 })
 
 test('xyz to lab', ({ expect }) => {
-  expect(xyz2lab({ X: 25, Y: 40, Z: 10 })).toEqual({ L: 69.46953076845696, a: -48.04394823565894, b: 57.12592468692367 })
+  expect(xyzToLab({ X: 25, Y: 40, Z: 10 })).toEqual({ L: 69.46953076845696, a: -48.04394823565894, b: 57.12592468692367 })
 })
 
 /**

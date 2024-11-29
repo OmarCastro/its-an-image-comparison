@@ -1,5 +1,5 @@
 import { ciede2000 } from './color-ciede2000-diff'
-import { rgb_to_lab as rgb2lab } from './color-convert'
+import { rgbToLab } from './color-convert'
 const { sqrt } = Math
 
 /**
@@ -30,8 +30,8 @@ export function distRGB (r1, g1, b1, r2, g2, b2) {
  * @returns {number} CIEDE2000 distance value
  */
 export function distCIEDE2000 (r1, g1, b1, r2, g2, b2) {
-  const c1 = rgb2lab({ R: r1, G: g1, B: b1 })
-  const c2 = rgb2lab({ R: r2, G: g2, B: b2 })
+  const c1 = rgbToLab({ R: r1, G: g1, B: b1 })
+  const c2 = rgbToLab({ R: r2, G: g2, B: b2 })
   return ciede2000(c1, c2)
 }
 
