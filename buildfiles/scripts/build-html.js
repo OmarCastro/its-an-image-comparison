@@ -1,4 +1,3 @@
-/* eslint-disable max-lines-per-function, jsdoc/require-jsdoc, jsdoc/require-param-description */
 import Prism from 'prismjs'
 import { minimatch } from 'minimatch'
 import { imageSize } from 'image-size'
@@ -56,7 +55,7 @@ const exampleCode = (strings, ...expr) => {
 }
 
 /**
- * @param {string} selector
+ * @param {string} selector - CSS selector to query elements
  * @returns {Element[]} element array to use array methods
  */
 const queryAll = (selector) => [...document.documentElement.querySelectorAll(selector)]
@@ -81,7 +80,7 @@ const readFileImport = (file) => {
 }
 
 /**
- * @param {Element} element
+ * @param {Element} element - target element that will be replaced with a `<code>` element
  * @returns {string} code classes
  */
 const exampleCodeClass = (element) => {
@@ -301,6 +300,12 @@ const minifiedHtml = '<!doctype html>' + minifyDOM(document.documentElement).out
 
 fs.writeFileSync(`${docsOutputPath}/${process.argv[2]}`, minifiedHtml)
 
+/**
+ * dedents the code by the minimum identation level found, ignoring empty lines
+ * @param {string|string[]} templateStrings - string or template sting sections
+ * @param  {...any} values - value sections when used as template string
+ * @returns {string} dedented text
+ */
 function dedent (templateStrings, ...values) {
   const matches = []
   const strings = typeof templateStrings === 'string' ? [templateStrings] : templateStrings.slice()
@@ -325,6 +330,11 @@ function dedent (templateStrings, ...values) {
   return string
 }
 
+/**
+ * Recursively lists the files in directory
+ * @param {string} dir - target dir path
+ * @yields {string} file path normalized to `dir` path
+ */
 async function * getFiles (dir) {
   const dirents = await readdir(dir, { withFileTypes: true })
 
@@ -338,6 +348,11 @@ async function * getFiles (dir) {
   }
 }
 
+/**
+ * Minifies CSS code
+ * @param {string} cssText - original css code
+ * @returns {string} minified css code
+ */
 async function minifyCss (cssText) {
   const esbuild = await import('esbuild')
   const result = await esbuild.transform(cssText, { loader: 'css', minify: true })
@@ -353,38 +368,16 @@ function minifyDOM (domElement) {
   const window = domElement.ownerDocument.defaultView
   const { TEXT_NODE, ELEMENT_NODE, COMMENT_NODE } = window.Node
 
-  /** @typedef {"remove-blank" | "1-space" | "pre"} WhitespaceMinify */
-  /**
-   * @typedef {object} MinificationState
-   * @property {WhitespaceMinify} whitespaceMinify - current whitespace minification method
-   */
-
-  /**
-   * Minify the text node based con current minification status
-   * @param {ChildNode} node - current text node
-   * @param {WhitespaceMinify} whitespaceMinify - whitespace minification removal method
-   */
-  function minifyTextNode (node, whitespaceMinify) {
-    if (whitespaceMinify === 'pre') {
-      return
-    }
-    // blank node is empty or contains whitespace only, so we remove it
-    const isBlankNode = !/[^\s]/.test(node.nodeValue)
-    if (isBlankNode && whitespaceMinify === 'remove-blank') {
-      node.remove()
-      return
-    }
-    if (whitespaceMinify === '1-space') {
-      node.nodeValue = node.nodeValue.replace(/\s\s+/g, ' ')
-    }
-  }
-
   const defaultMinificationState = { whitespaceMinify: '1-space' }
+  const initialMinificationState = updateMinificationStateForElement(domElement, defaultMinificationState)
+  walkElementMinification(domElement, initialMinificationState)
+  return domElement
 
   /**
-   * @param {Element} element
-   * @param {MinificationState} minificationState
-   * @returns {MinificationState} update minification State
+   * Updates minification state for each element
+   * @param {Element} element - target element
+   * @param {MinificationState} minificationState - previous minification state
+   * @returns {MinificationState} next minification State
    */
   function updateMinificationStateForElement (element, minificationState) {
     const tag = element.tagName.toLowerCase()
@@ -392,7 +385,7 @@ function minifyDOM (domElement) {
     if (['pre'].includes(tag)) {
       return { ...minificationState, whitespaceMinify: 'pre' }
     }
-    // <html> and <head> are not rendered in the viewport, so we remove it
+    // <html> and <head> are not rendered in the viewport, so we remove all blank text nodes
     if (['html', 'head'].includes(tag)) {
       return { ...minificationState, whitespaceMinify: 'remove-blank' }
     }
@@ -411,25 +404,42 @@ function minifyDOM (domElement) {
    */
   function walkElementMinification (currentElement, minificationState) {
     const { whitespaceMinify } = minificationState
+    const childNodes = currentElement?.childNodes?.values()
+    if (!childNodes) { return }
     // we have to make a copy of the iterator for traversal, because we cannot
     // iterate through what we'll be modifying at the same time
-    const values = [...currentElement?.childNodes?.values()]
+    const values = Array.from(childNodes)
     for (const node of values) {
       if (node.nodeType === COMMENT_NODE) {
-      // remove comments node
-        currentElement.removeChild(node)
+        node.remove()
       } else if (node.nodeType === TEXT_NODE) {
         minifyTextNode(node, whitespaceMinify)
       } else if (node.nodeType === ELEMENT_NODE) {
-        // process child elements recursively
         const updatedState = updateMinificationStateForElement(node, minificationState)
         walkElementMinification(node, updatedState)
       }
     }
   }
-  const initialMinificationState = updateMinificationStateForElement(domElement, defaultMinificationState)
-  walkElementMinification(domElement, initialMinificationState)
-  return domElement
+
+  /**
+   * Minify a DOM text node based con current minification status
+   * @param {ChildNode} node - current text node
+   * @param {WhitespaceMinify} whitespaceMinify - whitespace minification removal method
+   */
+  function minifyTextNode (node, whitespaceMinify) {
+    if (whitespaceMinify === 'pre') {
+      return
+    }
+    // blank node is empty or contains whitespace only, so we remove it
+    const isBlankNode = !/[^\s]/.test(node.nodeValue)
+    if (isBlankNode && whitespaceMinify === 'remove-blank') {
+      node.remove()
+      return
+    }
+    if (whitespaceMinify === '1-space') {
+      node.nodeValue = node.nodeValue.replace(/\s\s+/g, ' ')
+    }
+  }
 }
 
 /**
@@ -442,3 +452,9 @@ function highlightElement (domElement) {
     .map(line => `<span class="line">${line}</span>`)
     .join('\n')
 }
+
+/** @typedef {"remove-blank" | "1-space" | "pre"} WhitespaceMinify */
+/**
+ * @typedef {object} MinificationState
+ * @property {WhitespaceMinify} whitespaceMinify - current whitespace minification method
+ */
