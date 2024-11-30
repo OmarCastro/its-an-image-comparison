@@ -1,5 +1,3 @@
-/* eslint-disable sonarjs/cognitive-complexity */
-
 import { colorDeltaImgPosition, validAlgorithms } from './color-delta'
 import { rgb2y } from './color-metrics'
 import { colorOrFallbackColorToRGBA } from './html-color-to-rgba'

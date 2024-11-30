@@ -1,4 +1,4 @@
-/* eslint-disable max-lines-per-function, jsdoc/require-jsdoc, jsdoc/require-param-description, sonarjs/no-duplicate-string */
+/* eslint-disable max-lines-per-function, jsdoc/require-jsdoc, jsdoc/require-param-description */
 import Prism from 'prismjs'
 import { minimatch } from 'minimatch'
 import { imageSize } from 'image-size'
@@ -24,9 +24,7 @@ globalThis.document = document
 if (document == null) {
   throw new Error('error parsing document')
 }
-// @ts-ignore
 await import('prismjs/plugins/keep-markup/prism-keep-markup.js')
-// @ts-ignore
 await import('prismjs/components/prism-json.js')
 await import('prismjs/components/prism-bash.js')
 

@@ -1,6 +1,5 @@
 import globals from 'globals'
 import neostandard from 'neostandard'
-import sonarjs from 'eslint-plugin-sonarjs'
 import jsdoc from 'eslint-plugin-jsdoc'
 import eslintPluginUnicorn from 'eslint-plugin-unicorn'
 
@@ -15,7 +14,6 @@ export default [
   },
   ...neostandard(),
   jsdoc.configs['flat/recommended-typescript-flavor'],
-  sonarjs.configs.recommended,
   {
     plugins: {
       unicorn: eslintPluginUnicorn,
@@ -39,7 +37,6 @@ export default [
       'unicorn/prefer-array-find': ['error'],
       'jsdoc/valid-types': 0,
       'jsdoc/require-returns': ['warn', { publicOnly: true }],
-      'sonarjs/cognitive-complexity': ['error', 15],
       'max-lines-per-function': ['warn', 75],
       'jsdoc/tag-lines': ['error', 'any', { startLines: null }]
     },
@@ -54,8 +51,6 @@ export default [
       'jsdoc/require-returns-description': 0,
       '@cspell/spellchecker': 0,
       'max-lines-per-function': 0,
-      'sonarjs/no-duplicate-string': 0,
-      'sonarjs/no-identical-functions': 0
     }
   },
 ]
