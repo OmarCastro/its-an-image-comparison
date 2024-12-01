@@ -83,8 +83,8 @@ export function getAntiAliasMap (params) {
  * @param {Uint8Array | Uint8ClampedArray | null} [params.antialiasOutput] - output image for
  *     antialias, useful if you need a separate image for antialias, uses `params.output` if
  *     undefined
- * @param {number} [params.threshold] - theshold value, integer number between 0 and 100, both
- *     inclusive, if the difference is below or equal the theshold, it is considered similar
+ * @param {number} [params.threshold] - threshold value, integer number between 0 and 100, both
+ *     inclusive, if the difference is below or equal the threshold, it is considered similar
  *     pixel, and will not count as a different pixel
  * @param {boolean} [params.antialias] - whether to include anti-aliasing detection
  * @param {string} [params.aaColor] - color of anti-aliased pixels in diff output

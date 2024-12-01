@@ -94,9 +94,9 @@ export function ciede2000 (c1, c2) {
 function hp_f (x, y) { // (7)
   if (x === 0 && y === 0) return 0
   else {
-    const tmphp = degrees(atan2(x, y))
-    if (tmphp >= 0) return tmphp
-    else return tmphp + 360
+    const tmp_hp = degrees(atan2(x, y))
+    if (tmp_hp >= 0) return tmp_hp
+    else return tmp_hp + 360
   }
 }
 

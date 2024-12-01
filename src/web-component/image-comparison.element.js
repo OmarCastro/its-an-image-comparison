@@ -52,7 +52,7 @@ export class ImageComparisonElement extends HTMLElement {
     shadowRoot.append(document.importNode(template.content, true))
     const slider = shadowRoot.querySelector('.comparison-slider')
     if (!slider) { return }
-    addSliderDragBehaviour(slider)
+    addSliderDragBehavior(slider)
     intersectionObserver.observe(slider)
     resizeObserver.observe(slider)
     shadowRoot.querySelector(leftImgSelector)?.addEventListener('load', () => this.updateCanvas())
@@ -225,10 +225,10 @@ function updateSliderDimensions (slider) {
 }
 
 /**
- * Add slider behaviour
+ * Add slider behavior
  * @param {Element} slider - slider element container
  */
-function addSliderDragBehaviour (slider) {
+function addSliderDragBehavior (slider) {
   const dragElement = slider.querySelector('div.divider')
   const resizeElement = slider.querySelector('div.resize')
 
@@ -243,9 +243,9 @@ function addSliderDragBehaviour (slider) {
   /**
    * @param {PointerEvent} event - pointer move event
    */
-  const pointermovehandler = function (event) {
+  const pointerMoveHandler = function (event) {
     // if the user is using mouse, use preventDefault to prevent the user from
-    // selecting the images as he moves the silder around.
+    // selecting the images as he moves the slider around.
     if (event.pointerType === 'mouse') {
       event.preventDefault()
     }
@@ -275,12 +275,12 @@ function addSliderDragBehaviour (slider) {
     minLeft = containerOffset + 10
     maxLeft = containerOffset + containerWidth - dragWidth - 10
 
-    window.addEventListener('pointermove', pointermovehandler)
+    window.addEventListener('pointermove', pointerMoveHandler)
 
     window.addEventListener('pointerup', () => {
-      // stop clicping the image and move the slider
+      // stop clicking the image and move the slider
       dragElement.classList.remove('dragging')
-      window.removeEventListener('pointermove', pointermovehandler)
+      window.removeEventListener('pointermove', pointerMoveHandler)
     }, { once: true })
   })
 }
