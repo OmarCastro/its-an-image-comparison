@@ -1,7 +1,11 @@
 import globals from 'globals'
 import neostandard from 'neostandard'
 import jsdoc from 'eslint-plugin-jsdoc'
+import js from '@eslint/js'
+// eslint-disable-next-line
+import cspellESLintPluginRecommended from '@cspell/eslint-plugin/recommended'
 import eslintPluginUnicorn from 'eslint-plugin-unicorn'
+import eslintPluginImportX from 'eslint-plugin-import-x'
 
 export default [
   {
@@ -13,7 +17,10 @@ export default [
     ],
   },
   ...neostandard(),
+  js.configs.recommended,
   jsdoc.configs['flat/recommended-typescript-flavor'],
+  eslintPluginImportX.flatConfigs.recommended,
+  cspellESLintPluginRecommended,
   {
     plugins: {
       unicorn: eslintPluginUnicorn,
@@ -37,9 +44,23 @@ export default [
       'unicorn/prefer-array-find': ['error'],
       'jsdoc/valid-types': 0,
       'jsdoc/require-returns': ['warn', { publicOnly: true }],
-      'max-lines-per-function': ['warn', 75],
-      'jsdoc/tag-lines': ['error', 'any', { startLines: null }]
+      'max-lines-per-function': ['warn', { max: 75, skipComments: true }],
+      'jsdoc/tag-lines': ['error', 'any', { startLines: null }],
+      '@cspell/spellchecker': 0
     },
+  },
+  {
+    files: ['src/**/*.js'],
+    rules: {
+      '@cspell/spellchecker': ['warn', {
+        cspell: {
+          words: [
+            'CIEDE', 'NTSC', 'Kotsarenko', 'Vysniauskas', 'Tristimulus', 'Sylvania', 'Ultralume',
+            'CIELAB', 'Gaurav', 'Sharma', 'Wencheng', 'Edul', 'Dalal', 'Ultralume',
+          ]
+        }
+      }]
+    }
   }, {
     files: [
       '**/*.spec.js',
@@ -50,7 +71,6 @@ export default [
       'jsdoc/require-returns': 0,
       'jsdoc/require-returns-description': 0,
       '@cspell/spellchecker': 0,
-      'max-lines-per-function': 0,
     }
   },
 ]
