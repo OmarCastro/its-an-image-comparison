@@ -380,22 +380,18 @@ function minifyDOM (domElement) {
    * @returns {MinificationState} next minification State
    */
   function updateMinificationStateForElement (element, minificationState) {
-    const tag = element.tagName.toLowerCase()
-    // by default, <pre> renders whitespace as is, so we do not want to minify in this case
-    if (['pre'].includes(tag)) {
-      return { ...minificationState, whitespaceMinify: 'pre' }
+    switch (element.tagName.toLowerCase()) {
+      // by default, <pre> renders whitespace as is, so we do not want to minify in this case
+      case 'pre': return { ...minificationState, whitespaceMinify: 'pre' }
+      // <html> and <head> are not rendered in the viewport, so we remove all blank text nodes
+      case 'html':
+      case 'head': return { ...minificationState, whitespaceMinify: 'remove-blank' }
+      // in the <body>, the default whitespace behaviour is to merge multiple whitespaces to 1,
+      // there will stil have some whitespace that will be merged, but at this point, there is
+      // little benefit to remove even more duplicated whitespace
+      case 'body': return { ...minificationState, whitespaceMinify: '1-space' }
+      default: return minificationState
     }
-    // <html> and <head> are not rendered in the viewport, so we remove all blank text nodes
-    if (['html', 'head'].includes(tag)) {
-      return { ...minificationState, whitespaceMinify: 'remove-blank' }
-    }
-    // in the <body>, the default whitespace behaviour is to merge multiple whitespaces to 1,
-    // there will stil have some whitespace that will be merged, but at this point, there is
-    // little benefit to remove even more duplicated whitespace
-    if (['body'].includes(tag)) {
-      return { ...minificationState, whitespaceMinify: '1-space' }
-    }
-    return minificationState
   }
 
   /**
@@ -440,6 +436,12 @@ function minifyDOM (domElement) {
       node.nodeValue = node.nodeValue.replace(/\s\s+/g, ' ')
     }
   }
+
+  /** @typedef {"remove-blank" | "1-space" | "pre"} WhitespaceMinify */
+  /**
+   * @typedef {object} MinificationState
+   * @property {WhitespaceMinify} whitespaceMinify - current whitespace minification method
+   */
 }
 
 /**
@@ -452,9 +454,3 @@ function highlightElement (domElement) {
     .map(line => `<span class="line">${line}</span>`)
     .join('\n')
 }
-
-/** @typedef {"remove-blank" | "1-space" | "pre"} WhitespaceMinify */
-/**
- * @typedef {object} MinificationState
- * @property {WhitespaceMinify} whitespaceMinify - current whitespace minification method
- */
