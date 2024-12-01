@@ -1,11 +1,11 @@
-/** @import { rgbcolor, labcolor, xyzcolor} from './color-types.d' */
+/** @import { RgbColor, LabColor, XyzColor} from './color-types.d' */
 
 const pow = Math.pow
 
 /**
  * Converts sRGB color `c` to CIE L*a*b*.
- * @param {rgbcolor} c standard-RGB color to convert, should have fields R,G,B
- * @returns {labcolor} the color in the CIE L*a*b* color space
+ * @param {RgbColor} c standard-RGB color to convert, should have fields R,G,B
+ * @returns {LabColor} the color in the CIE L*a*b* color space
  */
 export function rgbToLab (c) {
   return xyzToLab(rgbToXyz(c))
@@ -13,8 +13,8 @@ export function rgbToLab (c) {
 
 /**
  * Converts sRGB color to CIE 1931 XYZ color  (2° observer). Based on {@link http://www.easyrgb.com/en/math.php}
- * @param {rgbcolor} c standard-RGB color to convert, should have fields R,G,B
- * @returns {xyzcolor} the color in the CIE 1931 XYZ color space
+ * @param {RgbColor} c standard-RGB color to convert, should have fields R,G,B
+ * @returns {XyzColor} the color in the CIE 1931 XYZ color space
  */
 function rgbToXyz (c) {
   let R = (c.R / 255)
@@ -43,8 +43,8 @@ function rgbToXyz (c) {
  * Converts CIE 1931 XYZ values (2° observer) `c` to CIE L*a*b*.
  *
  * @see {@link http://www.easyrgb.com/en/math.php}
- * @param {xyzcolor} c - the CIE 1931 XYZ color to convert which refers to the D65/2° standard illuminant, should have fields X,Y,Z
- * @returns {labcolor} the color in the CIE L*a*b* color space
+ * @param {XyzColor} c - the CIE 1931 XYZ color to convert which refers to the D65/2° standard illuminant, should have fields X,Y,Z
+ * @returns {LabColor} the color in the CIE L*a*b* color space
  */
 export function xyzToLab (c) {
   const refY = 100.000

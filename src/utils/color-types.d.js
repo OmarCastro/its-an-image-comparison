@@ -1,5 +1,5 @@
 /**
- * @typedef {object} rgbcolor
+ * @typedef {object} RgbColor
  *
  * The RGB color model is an additive color model in which the red, green and blue primary colors of
  * light are added together in various ways to reproduce a broad array of colors. The name of the model
@@ -10,7 +10,7 @@
  */
 
 /**
- * @typedef {object} xyzcolor
+ * @typedef {object} XyzColor
  *
  * Represents the CIE 1931 color space which define the relationship between the visible spectrum and
  * the visual sensation of specific colors by human color vision. The CIE color spaces are mathematical
@@ -26,7 +26,7 @@
  */
 
 /**
- * @typedef {object} labcolor
+ * @typedef {object} LabColor
  *
  * The CIELAB color space, also referred to as L*a*b*, is a color space defined by the International
  * Commission on Illumination (abbreviated CIE) in 1976. It expresses color as three values: L* for

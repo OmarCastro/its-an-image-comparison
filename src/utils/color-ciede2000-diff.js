@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-/** @import { labcolor } from './color-types.d' */
+/** @import { LabColor } from './color-types.d' */
 const { sqrt, pow, cos, atan2, sin, abs, exp, PI, hypot } = Math
 
 /**
@@ -9,8 +9,8 @@ const { sqrt, pow, cos, atan2, sin, abs, exp, PI, hypot } = Math
  * Implementation Notes, Supplementary Test Data, and Mathematical Observations"
  * by Gaurav Sharma, Wencheng Wu and Edul N. Dalal.
  *
- * @param {labcolor} c1    CIE L*a*b* color object, should have fields L,a,b
- * @param {labcolor} c2    CIE L*a*b* color object, should have fields L,a,b
+ * @param {LabColor} c1    CIE L*a*b* color object, should have fields L,a,b
+ * @param {LabColor} c2    CIE L*a*b* color object, should have fields L,a,b
  * @returns {number}   Difference between c1 and c2
  */
 export function ciede2000 (c1, c2) {

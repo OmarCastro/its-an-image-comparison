@@ -1,4 +1,4 @@
-/** @import { rgbcolor } from './color-types.d' */
+/** @import { RgbColor } from './color-types.d' */
 
 /**
  *
@@ -9,7 +9,7 @@
  * @param {number} r2 - color 2 rgba red value
  * @param {number} g2 - color 2 rgba green value
  * @param {number} b2 - color 2 rgba blue value
- * @returns {rgbcolor} blended color
+ * @returns {RgbColor} blended color
  */
 export function colorBlend (r1, g1, b1, a1, r2, g2, b2) {
   if (a1 < 255) {
