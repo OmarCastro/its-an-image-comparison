@@ -33,7 +33,6 @@
     "eslint": "^9.16.0",
     "eslint-plugin-import-x": "^4.5.0",
     "eslint-plugin-jsdoc": "^50.6.0",
-    "eslint-plugin-sonarjs": "^1.0.4",
     "eslint-plugin-unicorn": "^56.0.1",
     "expect": "^29.7.0",
     "image-size": "^1.1.1",
