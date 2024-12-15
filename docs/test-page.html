@@ -9,20 +9,36 @@
         <script type="module" src="dist/image-comparison.element.min.js?named=image-comparison" async></script>
         <link rel="stylesheet" href="code-example.css" ss:inline>
         <link rel="stylesheet" href="doc.css" ss:inline>
+        <style>
+        body {
+            display: block;
+            
+        }
+        
+        .test-example {
+            display: block;
+            width: 700px;
+            
+        }
+        </style>
     </head>
     <body>
+        
         <h3>basic image</h3>
-
-        <image-comparison class="image-comparison-1">
-            <img src="assets/image-1.png">
-            <img src="assets/image-2.png">
-        </image-comparison>
+        <div class="test-example">
+            <image-comparison class="image-comparison-1">
+                <img src="assets/image-1.png">
+                <img src="assets/image-2.png">
+            </image-comparison>    
+        </div>
 
         <h3>opacity image</h3>
+        <div class="test-example">
+            <image-comparison class="image-comparison-2">
+                <img src="assets/Gartus-glass-ball-1.svg">
+                <img src="assets/Gartus-glass-ball-2.svg">
+            </image-comparison>
+        </div>
 
-        <image-comparison class="image-comparison-2">
-            <img src="assets/Gartus-glass-ball-1.svg">
-            <img src="assets/Gartus-glass-ball-2.svg">
-        </image-comparison>
     </body>
 </html>
