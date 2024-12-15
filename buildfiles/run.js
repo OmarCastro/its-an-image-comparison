@@ -675,8 +675,8 @@ async function minifyCss (cssText) {
   return result.code
 }
 
-function minifyDOM (domElement) {
-  const window = domElement.ownerDocument.defaultView
+async function minifyDOM (domElement) {
+  const { window } = await loadDom()
   const { TEXT_NODE, ELEMENT_NODE, COMMENT_NODE } = window.Node
 
   const defaultMinificationState = { whitespaceMinify: '1-space' }
