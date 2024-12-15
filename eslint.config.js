@@ -2,10 +2,8 @@ import globals from 'globals'
 import neostandard from 'neostandard'
 import jsdoc from 'eslint-plugin-jsdoc'
 import js from '@eslint/js'
-// eslint-disable-next-line
 import cspellESLintPluginRecommended from '@cspell/eslint-plugin/recommended'
 import eslintPluginUnicorn from 'eslint-plugin-unicorn'
-import eslintPluginImportX from 'eslint-plugin-import-x'
 
 export default [
   {
@@ -19,7 +17,6 @@ export default [
   ...neostandard(),
   js.configs.recommended,
   jsdoc.configs['flat/recommended-typescript-flavor'],
-  eslintPluginImportX.flatConfigs.recommended,
   cspellESLintPluginRecommended,
   {
     plugins: {
