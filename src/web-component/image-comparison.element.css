@@ -94,9 +94,9 @@
 
     .overlay {
         position: absolute;
-        width: 250px;
+        max-width: 250px;
         bottom: 20px;
-        right: 20px;
+        right: 0;
         background-color: rgba(0, 0, 0, 0.4);
         padding: 10px;
         box-sizing: border-box;
@@ -117,8 +117,8 @@
         }
         .overlay {
             right: auto;
-            left: 20px;
             text-align: left;
+            text-wrap: nowrap;
         }
     }
 
