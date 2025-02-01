@@ -89,11 +89,11 @@
 
             <div class="example example--antialias">
                 <h3> With opacity </h3>
-                <image-comparison data-antialias>
+                <image-comparison>
                     <img src="assets/Gartus-glass-ball-1.svg">
                     <img src="assets/Gartus-glass-ball-2.svg">
                 </image-comparison>
-                <script type="text/plain" class="html-example"><{{elementName}} data-antialias>
+                <script type="text/plain" class="html-example"><{{elementName}}>
                     <img src="assets/Gartus-glass-ball-1.svg">
                     <img src="assets/Gartus-glass-ball-2.svg">
                 </{{elementName}}></script>
@@ -153,6 +153,35 @@
                         <figcaption>Right image</figcaption>
                     </figure>
                 </{{elementName}}></script>
+            </div>
+
+            <div class="example example--styling">
+                <h3> Styling </h3>
+                <image-comparison class="styling-example" data-antialias>
+                    <figure>
+                        <img src="assets/image-1.png">
+                        <figcaption>Left image</figcaption>
+                    </figure>
+                    <figure>
+                        <img src="assets/image-2.png">
+                        <figcaption>Right image</figcaption>
+                    </figure>
+                </image-comparison>
+                <script type="text/plain" class="html-example"><{{elementName}} class="styling-example" data-antialias>
+                    <figure>
+                        <img src="assets/image-1.png">
+                        <figcaption>Left image</figcaption>
+                    </figure>
+                    <figure>
+                        <img src="assets/image-2.png">
+                        <figcaption>Right image</figcaption>
+                    </figure>
+                </{{elementName}}></script>
+                <script type="text/plain" class="css-example">.styling-example {
+                    --antialias-diff-color: yellow;
+                }
+                </script>
+                
             </div>
     
         </section>
