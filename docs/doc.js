@@ -7,21 +7,8 @@ document.addEventListener('DOMContentLoaded', function () {
     el.innerHTML = lines.map((line) => line.slice(minSpaces)).join('\n').trim()
   })
 })
-const getExampleColorWheel = (childNode) => childNode.closest('.example')?.querySelectorAll('color-wheel') ?? []
-const reactElementNameChange = (event) => {
-  const componentName = event.target.closest('.component-name-edit')
-  if (componentName == null) {
-    return false
-  }
-  const newText = componentName.textContent
-  document.body.querySelectorAll('.component-name-edit').forEach((ref) => {
-    if (componentName !== ref) { ref.textContent = newText }
-  })
-  document.body.querySelectorAll('.component-name-ref').forEach((ref) => {
-    ref.textContent = newText
-  })
-  return true
-}
+const getExampleColorWheel = (childNode) => childNode.closest('.example')?.querySelectorAll('image-comparison') ?? []
+
 const reactUIModeChange = (event) => {
   const uiMode = event.target.closest('.example .ui-mode-edit')
   if (uiMode == null) {
@@ -61,5 +48,18 @@ const reactValueChange = (event) => {
   return true
 }
 document.body.addEventListener('input', (event) => {
-  reactElementNameChange(event) || reactUIModeChange(event) || reactLightnessChange(event) || reactValueChange(event) || reactInnerRadiusChange(event)
+  reactUIModeChange(event) || reactLightnessChange(event) || reactValueChange(event) || reactInnerRadiusChange(event)
 })
+
+/**
+ * @param {Event} event - 'input' event object
+ */
+function reactElementNameChange (event) {
+  const componentName = event.target.closest('.component-name-edit')
+  if (componentName == null) { return }
+  const newText = componentName.textContent
+  document.body.querySelectorAll('.component-name-edit').forEach(ref => { if (componentName !== ref) ref.textContent = newText })
+  document.body.querySelectorAll('.component-name-ref').forEach(ref => { ref.textContent = newText })
+}
+
+document.body.addEventListener('input', (event) => { reactElementNameChange(event) })
