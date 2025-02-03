@@ -1,6 +1,6 @@
 import html from './image-comparison.element.html'
 import css from './image-comparison.element.css'
-import { calculateDiff } from '../utils/color-diff'
+import { calculateDiff, fallbackAAColor, fallbackDiffColor } from '../utils/color-diff'
 import { colorOrFallbackColorToRGBA } from '../utils/html-color-to-rgba'
 
 let loadTemplate = () => {
@@ -127,7 +127,9 @@ export class ImageComparisonElement extends HTMLElement {
       const data = componentData.get(this)
 
       data.aaData = antialiasImgData
+      data.diffData = diff.data
       data.appliedAAColor = null
+      data.appliedDiffColor = null
 
       data.diffs = calculateDiff({
         img1: img1.data,
@@ -176,11 +178,14 @@ function updateDiffColors (component) {
   const data = componentData.get(component)
 
   const antialiasImgData = data.aaData
+  const diffImgData = data.diffData
   const appliedAAColor = data.appliedAAColor
+  const appliedDiffColor = data.appliedDiffColor
   if (!antialiasImgData) { return }
 
-  const aaColorToApply = getComputedStyle(component).getPropertyValue('--antialias-diff-color')
-  if (aaColorToApply === appliedAAColor) { return }
+  const aaColorToApply = getComputedStyle(component).getPropertyValue('--antialias-diff-color') || fallbackAAColor
+  const diffColorToApply = getComputedStyle(component).getPropertyValue('--diff-color') || fallbackDiffColor
+  if (aaColorToApply === appliedAAColor && diffColorToApply === appliedDiffColor) { return }
 
   const { shadowRoot } = component
   if (!shadowRoot) { return }
@@ -189,17 +194,32 @@ function updateDiffColors (component) {
     if (!context) { return }
     const diff = context.getImageData(0, 0, canvas.width, canvas.height, { colorSpace: 'srgb' })
 
-    const aaRGBAColor = colorOrFallbackColorToRGBA(aaColorToApply, 'yellow')
-    for (let pos = 0, e = antialiasImgData.length; pos < e; pos += 4) {
-      if (antialiasImgData[pos + 3] > 0) {
-        const { data } = diff
-        data[pos] = aaRGBAColor[0]
-        data[pos + 1] = aaRGBAColor[1]
-        data[pos + 2] = aaRGBAColor[2]
-        data[pos + 3] = aaRGBAColor[3]
+    if (aaColorToApply !== appliedAAColor) {
+      const aaRGBAColor = colorOrFallbackColorToRGBA(aaColorToApply, fallbackAAColor)
+      for (let pos = 0, e = antialiasImgData.length; pos < e; pos += 4) {
+        if (antialiasImgData[pos + 3] > 0) {
+          const { data } = diff
+          data[pos] = aaRGBAColor[0]
+          data[pos + 1] = aaRGBAColor[1]
+          data[pos + 2] = aaRGBAColor[2]
+          data[pos + 3] = aaRGBAColor[3]
+        }
       }
+      data.appliedAAColor = aaColorToApply
     }
-    data.appliedAAColor = aaColorToApply
+    if (diffColorToApply === appliedDiffColor) {
+      const diffRGBAColor = colorOrFallbackColorToRGBA(diffColorToApply, fallbackDiffColor)
+      for (let pos = 0, e = diffImgData.length; pos < e; pos += 4) {
+        if (diffImgData[pos + 3] > 0) {
+          const { data } = diff
+          data[pos] = diffRGBAColor[0]
+          data[pos + 1] = diffRGBAColor[1]
+          data[pos + 2] = diffRGBAColor[2]
+          data[pos + 3] = diffRGBAColor[3]
+        }
+      }
+      data.appliedDiffColor = diffColorToApply
+    }
     context.putImageData(diff, 0, 0)
   })
 }
