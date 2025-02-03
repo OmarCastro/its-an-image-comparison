@@ -7,49 +7,68 @@ document.addEventListener('DOMContentLoaded', function () {
     el.innerHTML = lines.map((line) => line.slice(minSpaces)).join('\n').trim()
   })
 })
-const getExampleColorWheel = (childNode) => childNode.closest('.example')?.querySelectorAll('image-comparison') ?? []
 
-const reactUIModeChange = (event) => {
-  const uiMode = event.target.closest('.example .ui-mode-edit')
-  if (uiMode == null) {
-    return false
-  }
-  const uiModeText = uiMode.textContent
-  getExampleColorWheel(uiMode).forEach((ref) => ref.style.setProperty('--ui-mode', `"${uiModeText}"`))
-  return true
-}
-const reactInnerRadiusChange = (event) => {
-  const innerRadius = event.target.closest('.example .inner-radius-edit')
-  if (innerRadius == null) {
-    return false
-  }
-  const innerRadiusText = innerRadius.textContent
-  getExampleColorWheel(innerRadius).forEach((ref) => ref.style.setProperty('--color-wheel-inner-radius', `${innerRadiusText}`))
-  return true
-}
-const reactLightnessChange = (event) => {
-  const lightness = event.target.closest('.example .lightness-edit')
-  if (lightness == null) {
-    return false
-  }
-  const lightnessText = lightness.textContent
-  getExampleColorWheel(lightness).forEach((ref) => ref.setAttribute('lightness', lightnessText ?? ''))
-  return true
-}
-const reactValueChange = (event) => {
-  const value = event.target.closest('.example .value-edit')
-  if (value == null) {
-    return false
-  }
-  const valueText = value.textContent
-  getExampleColorWheel(value).forEach((ref) => {
-    ref.setAttribute('value', valueText ?? '')
+document.querySelectorAll('.example').forEach(element => {
+  const exampleObj = {}
+
+  console.log('.example %o', element)
+
+  element.querySelectorAll('.example__json .editor').forEach(element => {
+    const lang = element.getAttribute('data-lang')
+    if (!lang) { return }
+    exampleObj[lang] = JSON.parse(element.textContent || '')
   })
-  return true
-}
-document.body.addEventListener('input', (event) => {
-  reactUIModeChange(event) || reactLightnessChange(event) || reactValueChange(event) || reactInnerRadiusChange(event)
+
+  element.addEventListener('input', handleInput.bind(null, element))
 })
+
+/** @param {EventTarget} target - target element */
+const matchesTextEdit = (target) => target.matches('.text-edit')
+
+const BIND_SELECTOR_ATTRIBUTE = 'data-bind-selector'
+const ELEMENT_TAG_NAME = 'image-comparison'
+
+/**
+ * @param {Element} exampleElement - example element listening for input events
+ * @param {InputEvent} event - triggered event
+ */
+function handleInput (exampleElement, event) {
+  const { target } = event
+  if (matchesTextEdit(target)) {
+    const selector = event.target.getAttribute(BIND_SELECTOR_ATTRIBUTE) || ELEMENT_TAG_NAME
+    const node = exampleElement.querySelector(selector)
+    if (node) { node.textContent = event.target.textContent }
+  } else if (target.matches('.example-attribute-edit')) {
+    const attribute = target.getAttribute('data-attribute').trim()
+    reflectAttributeOnElement(exampleElement, event, attribute)
+  } else if (target.matches('.example-style-edit')) {
+    const cssProperty = target.getAttribute('data-style').trim()
+    reflectStyleOnElement(exampleElement, event, cssProperty)
+  }
+}
+
+/**
+ * @param {Element} exampleElement - example element listening for input events
+ * @param {InputEvent} event - triggered event
+ * @param {string} attribute - reflecting attribute
+ */
+function reflectAttributeOnElement (exampleElement, event, attribute) {
+  const selector = event.target.getAttribute(BIND_SELECTOR_ATTRIBUTE) || ELEMENT_TAG_NAME
+  const node = exampleElement.querySelector(selector)
+  node && node.setAttribute(attribute, event.target.textContent)
+}
+
+/**
+ *
+ * @param {Element} exampleElement - example element listening for input events
+ * @param {InputEvent} event - triggered event
+ * @param {string} styleProperty - reflecting css property
+ */
+function reflectStyleOnElement (exampleElement, event, styleProperty) {
+  const selector = event.target.getAttribute(BIND_SELECTOR_ATTRIBUTE) || ELEMENT_TAG_NAME
+  const node = exampleElement.querySelector(selector)
+  node && node.style.setProperty(styleProperty, event.target.textContent)
+}
 
 /**
  * @param {Event} event - 'input' event object
