@@ -3,8 +3,8 @@ import { rgb2y } from './color-metrics'
 import { colorOrFallbackColorToRGBA } from './html-color-to-rgba'
 /** @import {Algorithm} from './color-delta' */
 
-const fallbackAAColor = 'yellow'
-const fallbackDiffColor = 'red'
+export const fallbackAAColor = 'yellow'
+export const fallbackDiffColor = 'red'
 
 /**
  * @param {object} params - function parameters
@@ -80,9 +80,8 @@ export function getAntiAliasMap (params) {
  * @param {number} params.width - images width
  * @param {number} params.height - images height
  * @param {Uint8Array | Uint8ClampedArray | null} [params.output] - output image
- * @param {Uint8Array | Uint8ClampedArray | null} [params.antialiasOutput] - output image for
- *     antialias, useful if you need a separate image for antialias, uses `params.output` if
- *     undefined
+ * @param {Uint8Array | Uint8ClampedArray | null} [params.diffMapOutput] - output for difference map,
+ *     useful if you need a separate image for antialias or diff
  * @param {number} [params.threshold] - threshold value, integer number between 0 and 100, both
  *     inclusive, if the difference is below or equal the threshold, it is considered similar
  *     pixel, and will not count as a different pixel
@@ -94,7 +93,7 @@ export function getAntiAliasMap (params) {
  * @returns {{diffPixelAmount: number, aaPixelAmount: number}} number of different pixels
  */
 export function calculateDiff ({
-  img1, img2, output, antialiasOutput, width, height,
+  img1, img2, output, diffMapOutput, width, height,
   threshold = 10,
   antialias = false,
   aaColor = fallbackAAColor,
@@ -102,10 +101,9 @@ export function calculateDiff ({
   diffMask = false,
   alpha = 0.1,
 }) {
-  antialiasOutput ??= output
-
   validateImagePreconditions({ img1, img2, width, height, output })
-  if (img1.length !== img2.length || (output && output.length !== img1.length) || (antialiasOutput && antialiasOutput.length !== img1.length)) { throw new Error('Image sizes do not match.') }
+  if (diffMapOutput && diffMapOutput.length !== width * height) { throw new Error('diffMapOutput data size does not match width/height.') }
+  if (img1.length !== img2.length || (output && output.length !== img1.length)) { throw new Error('Image sizes do not match.') }
 
   const { identical, diffMap } = getNormalizedDiffs({ img1, img2, width, height, algorithm: 'CIEDE2000' })
 
@@ -138,18 +136,21 @@ export function calculateDiff ({
         // check it's a real rendering difference or just anti-aliasing
         if (antiAliasMap && (antiAliasMap[y * width + x] & 1) === 1) {
           // one of the pixels is anti-aliasing; draw as yellow and do not count as difference
-          if (antialiasOutput) drawPixel(antialiasOutput, pos, aaR, aaG, aaB)
+          if (output) { drawPixel(output, pos, aaR, aaG, aaB) }
+          if (diffMapOutput) { diffMapOutput[y * width + x] = 0b0011 }
           aaPixelAmount++
         } else {
           // found substantial difference not caused by anti-aliasing; draw it as such
-          if (output) {
-            drawPixel(output, pos, diffR, diffG, diffB)
-          }
+          if (output) { drawPixel(output, pos, diffR, diffG, diffB) }
+          if (diffMapOutput) { diffMapOutput[y * width + x] = 0b0001 }
           diffPixelAmount++
         }
-      } else if (output && !diffMask) {
-        // pixels are similar; draw background as grayscale image blended with white
-        drawGrayPixel(img1, pos, alpha, output)
+      } else {
+        if (output && !diffMask) {
+          // pixels are similar; draw background as grayscale image blended with white
+          drawGrayPixel(img1, pos, alpha, output)
+        }
+        if (diffMapOutput) { diffMapOutput[y * width + x] = 0 }
       }
     }
   }
