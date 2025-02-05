@@ -143,7 +143,7 @@ async function execDevEnvironment ({ openBrowser = false } = {}) {
     if (filenames.some(name => name.endsWith('test-page.html') || name.startsWith(srcPath))) {
       tasks = [buildTest, execTests, buildDocs]
     } else {
-      tasks = [buildDocs]
+      tasks = [buildTest, buildDocs]
     }
 
     for (const task of tasks) {
