@@ -8,7 +8,9 @@
     --fg-color-disabled: #404550;
     --resizable-border-color: #303540;
     --tab-active-color: #007299;
-    --antialias-diff-color: yellow
+    --antialias-diff-color: yellow;
+    --diff-color: red;
+    transition: --antialias-diff-color 1ms step-start allow-discrete, --diff-color 1ms step-start allow-discrete;
 }
 
 @media (prefers-color-scheme: dark) {

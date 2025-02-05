@@ -58,6 +58,7 @@ export class ImageComparisonElement extends HTMLElement {
     shadowRoot.querySelector(leftImgSelector)?.addEventListener('load', () => this.updateCanvas())
     shadowRoot.querySelector(rightImgSelector)?.addEventListener('load', () => this.updateCanvas())
     componentData.set(this, {})
+    this.addEventListener('transitionstart', transitionstartEventHandler)
   }
 
   connectedCallback () {
@@ -165,6 +166,17 @@ export class ImageComparisonElement extends HTMLElement {
 
   set antialias (val) {
     this.toggleAttribute('data-antialias', !!val)
+  }
+}
+
+/**
+ *
+ * @param {Event} event - transition Event
+ */
+function transitionstartEventHandler (event) {
+  const { target } = event
+  if (target instanceof ImageComparisonElement) {
+    updateDiffColors(target)
   }
 }
 
