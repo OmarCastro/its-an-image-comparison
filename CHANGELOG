@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - improve documentation
+- add support for CSS '--antialias-diff-color and --diff-color custom properties
+- react to CSS custom property changes
 
 ### Fixed
 
