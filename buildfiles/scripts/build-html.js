@@ -1,6 +1,6 @@
 import Prism from 'prismjs'
 import { minimatch } from 'minimatch'
-import { imageSize } from 'image-size'
+import { imageSizeFromFile } from 'image-size/fromFile'
 import { JSDOM, VirtualConsole } from 'jsdom'
 import { marked } from 'marked'
 import { existsSync } from 'node:fs'
@@ -178,7 +178,7 @@ queryAll('img[ss:size]').forEach(element => {
   if (definedWidth && definedHeight) {
     return
   }
-  const size = imageSize(`${docsOutputPath}/${imageSrc}`)
+  const size = imageSizeFromFile(`${docsOutputPath}/${imageSrc}`)
   const { width, height } = size
   if (definedWidth) {
     element.setAttribute('width', `${definedWidth}`)
