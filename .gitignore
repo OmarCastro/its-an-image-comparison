@@ -34,3 +34,6 @@ coverage
 
 # smoke test generated content
 smoke-test/npm/js/index.min.js
+
+# smoke test package-lock.json, it will always get the latest version
+smoke-test/npm/package-lock.json
