@@ -1,0 +1,33 @@
+{
+  "name": "its-i18n-smoke-test",
+  "version": "0.1.0",
+  "description": "An i18n web component",
+  "main": "src/entrypoint/node.js",
+  "type": "module",
+  "files" : [
+    "README.md",
+    "src",
+    "build/dist",
+    "test-utils/",
+    "jsconfig.json"
+ ],
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OmarCastro/its-i18n.git"
+  },
+  "author": "Omar Castro",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/OmarCastro/its-i18n/issues"
+  },
+  "homepage": "https://omarcastro.github.io/its-i18n/",
+  "dependencies": {
+    "its-an-image-comparison": "latest"
+  }
+}
