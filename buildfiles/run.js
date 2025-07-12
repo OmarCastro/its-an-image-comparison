@@ -194,7 +194,7 @@ async function execTests () {
   ])
   logStage('build badges')
 
-  await Promise.allSettled([
+  await Promise.all([
     makeBadgeForCoverages(pathFromProject('reports/coverage/unit')),
     makeBadgeForCoverages(pathFromProject('reports/coverage/final')),
     makeBadgeForTestResult(pathFromProject('reports/test-results')),
@@ -1058,7 +1058,6 @@ async function makeBadgeForTestResult (path) {
     message: `${passedAmount} / ${testAmount}`,
     color: passed ? green : red,
     logo: asciiIconSvg('✔'),
-    logoWidth: 16,
   })
   const badgeWrite = writeFile(`${path}/test-results-badge.svg`, svg)
   const a11yBadgeWrite = writeFile(`${path}/test-results-badge-a11y.svg`, await applyA11yTheme(svg, { replaceIconToText: '✔' }))
