@@ -165,7 +165,7 @@ queryAll('[ss:aria-label]').forEach(element => {
   }
 })
 
-queryAll('img[ss:size]').forEach(element => {
+const applyImgSizes = queryAll('img[ss:size]').map(async (element) => {
   const imageSrc = element.getAttribute('src')
   const getdefinedLength = (attr) => {
     if (!element.hasAttribute(attr)) { return undefined }
@@ -178,7 +178,7 @@ queryAll('img[ss:size]').forEach(element => {
   if (definedWidth && definedHeight) {
     return
   }
-  const size = imageSizeFromFile(`${docsOutputPath}/${imageSrc}`)
+  const size = await imageSizeFromFile(`${docsOutputPath}/${imageSrc}`)
   const { width, height } = size
   if (definedWidth) {
     element.setAttribute('width', `${definedWidth}`)
@@ -241,7 +241,8 @@ await Promise.all([
   ...ssBadgeAttributesTasks,
   ...minifyStylesTasks,
   ...inlineCSSTasks,
-  ...repeatGlobLinksTask
+  ...repeatGlobLinksTask,
+  ...applyImgSizes,
 ])
 
 const tocUtils = {
