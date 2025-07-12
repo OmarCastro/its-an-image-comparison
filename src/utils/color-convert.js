@@ -1,4 +1,4 @@
-/** @import { RgbColor, LabColor, XyzColor} from './color-types.d' */
+/** @import { RgbColor, LabColor, XyzColor} from './color-types.d.js' */
 
 const pow = Math.pow
 

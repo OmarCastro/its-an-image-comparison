@@ -1,7 +1,7 @@
 import html from './image-comparison.element.html'
 import css from './image-comparison.element.css'
-import { calculateDiff, fallbackAAColor, fallbackDiffColor } from '../utils/color-diff'
-import { colorOrFallbackColorToRGBA } from '../utils/html-color-to-rgba'
+import { calculateDiff, fallbackAAColor, fallbackDiffColor } from '../utils/color-diff.js'
+import { colorOrFallbackColorToRGBA } from '../utils/html-color-to-rgba.js'
 
 let loadTemplate = () => {
   const templateElement = document.createElement('template')

@@ -1,5 +1,5 @@
-import { ciede2000 } from './color-ciede2000-diff'
-import { rgbToLab } from './color-convert'
+import { ciede2000 } from './color-ciede2000-diff.js'
+import { rgbToLab } from './color-convert.js'
 const { sqrt } = Math
 
 /**

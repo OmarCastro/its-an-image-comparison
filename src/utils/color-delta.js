@@ -1,5 +1,5 @@
-import { colorBlend } from './color-blend'
-import { distYIQ, distCIEDE2000, distRGB, distRieRGB, distYIQBrightness } from './color-metrics'
+import { colorBlend } from './color-blend.js'
+import { distYIQ, distCIEDE2000, distRGB, distRieRGB, distYIQBrightness } from './color-metrics.js'
 
 /** @param {number} num - number to round */
 const rounded = (num) => +num.toFixed(5)

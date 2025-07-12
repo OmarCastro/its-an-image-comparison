@@ -1,4 +1,4 @@
-/** @import { RgbColor } from './color-types.d' */
+/** @import { RgbColor } from './color-types.d.js' */
 
 /**
  *

@@ -1,7 +1,7 @@
-import { colorDeltaImgPosition, validAlgorithms } from './color-delta'
-import { rgb2y } from './color-metrics'
-import { colorOrFallbackColorToRGBA } from './html-color-to-rgba'
-/** @import {Algorithm} from './color-delta' */
+import { colorDeltaImgPosition, validAlgorithms } from './color-delta.js'
+import { rgb2y } from './color-metrics.js'
+import { colorOrFallbackColorToRGBA } from './html-color-to-rgba.js'
+/** @import {Algorithm} from './color-delta.js' */
 
 export const fallbackAAColor = 'yellow'
 export const fallbackDiffColor = 'red'

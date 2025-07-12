@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-/** @import { LabColor } from './color-types.d' */
+/** @import { LabColor } from './color-types.d.js' */
 const { sqrt, pow, cos, atan2, sin, abs, exp, PI, hypot } = Math
 
 /**
