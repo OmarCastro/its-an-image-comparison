@@ -180,6 +180,8 @@ function serveStaticPageIfExists (req, res, livereload, route) {
       file = `${file.toString()}\n\n<script>${CLIENT_WEBSOCKET_CODE}</script>`
     } else if (route.endsWith('.js')) {
       res.setHeader('Content-Type', 'application/javascript')
+    } else if (route.endsWith('.svg') || route.endsWith('.svgz')) {
+      res.setHeader('Content-Type', 'image/svg+xml')
     }
     res.writeHead(200)
     res.end(file)
