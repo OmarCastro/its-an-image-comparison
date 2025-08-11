@@ -14,7 +14,7 @@
   .fun{color:red}
 }
 
-@media print,projection{
+@media print, (prefers-contrast: high) {
   .str{color:#060}
   .kwd{color:#006;font-weight:bold}
   .com{color:#600;font-style:italic}
