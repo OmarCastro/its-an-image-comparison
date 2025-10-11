@@ -90,13 +90,13 @@ const exampleCodeClass = (element) => {
   return 'keep-markup' + lineNoClass + wrapClass
 }
 
-queryAll('[ss:include-html]').forEach(element => {
+queryAll('[ss\\:include-html]').forEach(element => {
   const ssInclude = element.getAttribute('ss:include-html')
   const text = readFileImport(ssInclude)
   element.innerHTML = text
 })
 
-queryAll('script[ss:include]').forEach(element => {
+queryAll('script[ss\\:include]').forEach(element => {
   const ssInclude = element.getAttribute('ss:include')
   const text = readFileImport(ssInclude)
   element.textContent = text
@@ -138,20 +138,20 @@ queryAll('script.text-example').forEach(element => {
   element.replaceWith(pre)
 })
 
-queryAll('svg[ss:include]').forEach(element => {
+queryAll('svg[ss\\:include]').forEach(element => {
   const ssInclude = element.getAttribute('ss:include')
   const svgText = readFileImport(ssInclude)
   element.outerHTML = svgText
 })
 
-queryAll('[ss:markdown]:not([ss:include])').forEach(element => {
+queryAll('[ss\\:markdown]:not([ss\\:include])').forEach(element => {
   const md = dedent(element.innerHTML)
     .replaceAll('\n&gt;', '\n>') // for blockquotes, innerHTML escapes ">" chars
   console.error(md)
   element.innerHTML = marked(md, { mangle: false, headerIds: false })
 })
 
-queryAll('[ss:markdown][ss:include]').forEach(element => {
+queryAll('[ss\\:markdown][ss\\:include]').forEach(element => {
   const ssInclude = element.getAttribute('ss:include')
   const md = readFileImport(ssInclude)
   element.innerHTML = marked(md, { mangle: false, headerIds: false })
@@ -159,13 +159,13 @@ queryAll('[ss:markdown][ss:include]').forEach(element => {
 
 queryAll('code').forEach(highlightElement)
 
-queryAll('[ss:aria-label]').forEach(element => {
+queryAll('[ss\\:aria-label]').forEach(element => {
   if (element.hasAttribute('title') && !element.hasAttribute('aria-label')) {
     element.setAttribute('aria-label', element.getAttribute('title'))
   }
 })
 
-const applyImgSizes = queryAll('img[ss:size]').map(async (element) => {
+const applyImgSizes = queryAll('img[ss\\:size]').map(async (element) => {
   const imageSrc = element.getAttribute('src')
   const getdefinedLength = (attr) => {
     if (!element.hasAttribute(attr)) { return undefined }
@@ -194,7 +194,7 @@ const applyImgSizes = queryAll('img[ss:size]').map(async (element) => {
   element.setAttribute('height', `${size.height}`)
 })
 
-const ssBadgeAttributesTasks = queryAll('img[ss:badge-attrs]').map(async (element) => {
+const ssBadgeAttributesTasks = queryAll('img[ss\\:badge-attrs]').map(async (element) => {
   const imageSrc = element.getAttribute('src')
   const svgText = await readFile(`${docsOutputPath}/${imageSrc}`, 'utf8')
   const div = document.createElement('div')
@@ -214,13 +214,13 @@ const minifyStylesTasks = queryAll('style').map(async element => {
   element.innerHTML = await minifyCss(element.innerHTML)
 })
 
-const inlineCSSTasks = queryAll('link[href][rel="stylesheet"][ss:inline]').map(async element => {
+const inlineCSSTasks = queryAll('link[href][rel="stylesheet"][ss\\:inline]').map(async element => {
   const href = element.getAttribute('href')
   const cssText = readFileImport(href)
   element.outerHTML = `<style>${await minifyCss(cssText)}</style>`
 })
 
-const repeatGlobLinksTask = queryAll('link[href][ss:repeat-glob]').map(async (element) => {
+const repeatGlobLinksTask = queryAll('link[href][ss\\:repeat-glob]').map(async (element) => {
   const href = element.getAttribute('href')
   if (!href) { return }
   for await (const filename of getFiles(docsOutputPath)) {
@@ -279,7 +279,7 @@ const tocUtils = {
   },
 }
 
-queryAll('[ss:toc]').forEach(element => {
+queryAll('[ss\\:toc]').forEach(element => {
   const ol = document.createElement('ol')
   /** @type {[HTMLElement, HTMLElement][]} */
   const path = []
