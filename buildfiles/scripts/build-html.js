@@ -90,14 +90,14 @@ const exampleCodeClass = (element) => {
   return 'keep-markup' + lineNoClass + wrapClass
 }
 
-queryAll('[ss\\:include-html]').forEach(element => {
-  const ssInclude = element.getAttribute('ss:include-html')
+queryAll('[p-include-html]').forEach(element => {
+  const ssInclude = element.getAttribute('p-include-html')
   const text = readFileImport(ssInclude)
   element.innerHTML = text
 })
 
-queryAll('script[ss\\:include]').forEach(element => {
-  const ssInclude = element.getAttribute('ss:include')
+queryAll('script[p-include]').forEach(element => {
+  const ssInclude = element.getAttribute('p-include')
   const text = readFileImport(ssInclude)
   element.textContent = text
 })
@@ -138,34 +138,34 @@ queryAll('script.text-example').forEach(element => {
   element.replaceWith(pre)
 })
 
-queryAll('svg[ss\\:include]').forEach(element => {
-  const ssInclude = element.getAttribute('ss:include')
+queryAll('svg[p-include]').forEach(element => {
+  const ssInclude = element.getAttribute('p-include')
   const svgText = readFileImport(ssInclude)
   element.outerHTML = svgText
 })
 
-queryAll('[ss\\:markdown]:not([ss\\:include])').forEach(element => {
+queryAll('[p-markdown]:not([p-include])').forEach(element => {
   const md = dedent(element.innerHTML)
     .replaceAll('\n&gt;', '\n>') // for blockquotes, innerHTML escapes ">" chars
   console.error(md)
   element.innerHTML = marked(md, { mangle: false, headerIds: false })
 })
 
-queryAll('[ss\\:markdown][ss\\:include]').forEach(element => {
-  const ssInclude = element.getAttribute('ss:include')
+queryAll('[p-markdown][p-include]').forEach(element => {
+  const ssInclude = element.getAttribute('p-include')
   const md = readFileImport(ssInclude)
   element.innerHTML = marked(md, { mangle: false, headerIds: false })
 })
 
 queryAll('code').forEach(highlightElement)
 
-queryAll('[ss\\:aria-label]').forEach(element => {
+queryAll('[p-aria-label]').forEach(element => {
   if (element.hasAttribute('title') && !element.hasAttribute('aria-label')) {
     element.setAttribute('aria-label', element.getAttribute('title'))
   }
 })
 
-const applyImgSizes = queryAll('img[ss\\:size]').map(async (element) => {
+const applyImgSizes = queryAll('img[p-size]').map(async (element) => {
   const imageSrc = element.getAttribute('src')
   const getdefinedLength = (attr) => {
     if (!element.hasAttribute(attr)) { return undefined }
@@ -194,12 +194,12 @@ const applyImgSizes = queryAll('img[ss\\:size]').map(async (element) => {
   element.setAttribute('height', `${size.height}`)
 })
 
-const ssBadgeAttributesTasks = queryAll('img[ss\\:badge-attrs]').map(async (element) => {
+const ssBadgeAttributesTasks = queryAll('img[p-badge-attrs]').map(async (element) => {
   const imageSrc = element.getAttribute('src')
   const svgText = await readFile(`${docsOutputPath}/${imageSrc}`, 'utf8')
   const div = document.createElement('div')
   div.innerHTML = svgText
-  element.removeAttribute('ss:badge-attrs')
+  element.removeAttribute('p-badge-attrs')
   const svg = div.querySelector('svg')
   if (!svg) { throw Error(`${docsOutputPath}/${imageSrc} is not a valid svg`) }
 
@@ -214,13 +214,13 @@ const minifyStylesTasks = queryAll('style').map(async element => {
   element.innerHTML = await minifyCss(element.innerHTML)
 })
 
-const inlineCSSTasks = queryAll('link[href][rel="stylesheet"][ss\\:inline]').map(async element => {
+const inlineCSSTasks = queryAll('link[href][rel="stylesheet"][p-inline]').map(async element => {
   const href = element.getAttribute('href')
   const cssText = readFileImport(href)
   element.outerHTML = `<style>${await minifyCss(cssText)}</style>`
 })
 
-const repeatGlobLinksTask = queryAll('link[href][ss\\:repeat-glob]').map(async (element) => {
+const repeatGlobLinksTask = queryAll('link[href][p-repeat-glob]').map(async (element) => {
   const href = element.getAttribute('href')
   if (!href) { return }
   for await (const filename of getFiles(docsOutputPath)) {
@@ -230,7 +230,7 @@ const repeatGlobLinksTask = queryAll('link[href][ss\\:repeat-glob]').map(async (
     for (const { name, value } of element.attributes) {
       link.setAttribute(name, value)
     }
-    link.removeAttribute('ss:repeat-glob')
+    link.removeAttribute('p-repeat-glob')
     link.setAttribute('href', filename)
     element.after(link)
   }
@@ -279,7 +279,7 @@ const tocUtils = {
   },
 }
 
-queryAll('[ss\\:toc]').forEach(element => {
+queryAll('[p-toc]').forEach(element => {
   const ol = document.createElement('ol')
   /** @type {[HTMLElement, HTMLElement][]} */
   const path = []
@@ -294,7 +294,7 @@ queryAll('[ss\\:toc]').forEach(element => {
 })
 
 queryAll('*').forEach(element => [...element.attributes]
-  .flatMap(attr => attr.name.startsWith('ss:') ? [attr.name] : [])
+  .flatMap(attr => attr.name.startsWith('p-') ? [attr.name] : [])
   .forEach(name => element.removeAttribute(name)))
 
 const minifiedHtml = '<!doctype html>' + minifyDOM(document.documentElement).outerHTML
