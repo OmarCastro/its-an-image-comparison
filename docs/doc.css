@@ -31,6 +31,15 @@
     a:visited { color: #d8d;}
 }
 
+iframe.test-frame {
+    border: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    pointer-events:none;
+    opacity: 0
+}
+
 body {
     margin: 0;
     background-color: var(--bg-color);
@@ -55,10 +64,7 @@ body {
 }
 
 /* Smartphones (portrait and landscape) ----------- */
-@media only screen and (
-    ((max-width : 480px) and (orientation: portrait)) or
-    ((max-height : 480px) and (orientation: landscape))
-){
+@media screen and (max-width : 480px) and (orientation: portrait), screen and (max-height : 480px) and (orientation: landscape){
     body > .sidebar {
         display: none;
     }
