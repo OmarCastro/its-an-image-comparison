@@ -421,6 +421,18 @@ async function buildDocs () {
     plugins: [await getESbuildPlugin()],
   })
 
+    /**
+     * Builds documentation specific JS code
+     */
+  const buildColorTestJS = esbuild.build({
+    ...commonBuildParams,
+    entryPoints: ['docs/color-test.js'],
+    outfile: `${docsPath}/color-test.js`,
+    format: 'esm',
+    plugins: [await getESbuildPlugin()],
+  })
+
+
   /**
    * Builds documentation styles
    */
@@ -430,11 +442,14 @@ async function buildDocs () {
     outfile: `${docsPath}/doc.css`,
   })
 
+
+
   await Promise.all([
-    buildDocsJS, buildDocsStyles,
+    buildDocsJS, buildDocsStyles, buildColorTestJS,
     fs.cp('docs/favicon.png', `${docsPath}/favicon.png`),
     exec(`${process.argv[0]} ${pathFromDevTools('scripts/build-html.js')} index.html`),
     exec(`${process.argv[0]} ${pathFromDevTools('scripts/build-html.js')} contributing.html`),
+    exec(`${process.argv[0]} ${pathFromDevTools('scripts/build-html.js')} color-test.html`),
   ])
 
   logEndStage()
