@@ -1,4 +1,4 @@
-/* eslint-disable camelcase */
+ 
 /** @import { LabColor } from './color-types.d.js' */
 const { sqrt, pow, cos, atan2, sin, abs, exp, PI, hypot } = Math
 
@@ -92,11 +92,11 @@ export function ciede2000 (c1, c2) {
  * @returns {number} h' value
  */
 function hp_f (x, y) { // (7)
-  if (x === 0 && y === 0) return 0
+  if (x === 0 && y === 0) {return 0}
   else {
     const tmp_hp = degrees(atan2(x, y))
-    if (tmp_hp >= 0) return tmp_hp
-    else return tmp_hp + 360
+    if (tmp_hp >= 0) {return tmp_hp}
+    else {return tmp_hp + 360}
   }
 }
 
@@ -118,11 +118,11 @@ function hp_f (x, y) { // (7)
  * @returns {number} 𝚫h' value
  */
 function dhp_f (C1, C2, h1p, h2p) { // (10)
-  if (C1 * C2 === 0) return 0
-  else if (abs(h2p - h1p) <= 180) return h2p - h1p
-  else if ((h2p - h1p) > 180) return (h2p - h1p) - 360
-  else if ((h2p - h1p) < -180) return (h2p - h1p) + 360
-  else throw (new Error())
+  if (C1 * C2 === 0) {return 0}
+  else if (abs(h2p - h1p) <= 180) {return h2p - h1p}
+  else if ((h2p - h1p) > 180) {return (h2p - h1p) - 360}
+  else if ((h2p - h1p) < -180) {return (h2p - h1p) + 360}
+  else {throw (new Error())}
 }
 
 /**
@@ -149,11 +149,11 @@ function dhp_f (C1, C2, h1p, h2p) { // (10)
  * @returns {number} 𝚫h' value
  */
 function a_hp_f (C1, C2, h1p, h2p) { // (14)
-  if (C1 * C2 === 0) return h1p + h2p
-  else if (abs(h1p - h2p) <= 180) return (h1p + h2p) / 2.0
-  else if ((abs(h1p - h2p) > 180) && ((h1p + h2p) < 360)) return (h1p + h2p + 360) / 2.0
-  else if ((abs(h1p - h2p) > 180) && ((h1p + h2p) >= 360)) return (h1p + h2p - 360) / 2.0
-  else throw (new Error())
+  if (C1 * C2 === 0) {return h1p + h2p}
+  else if (abs(h1p - h2p) <= 180) {return (h1p + h2p) / 2.0}
+  else if ((abs(h1p - h2p) > 180) && ((h1p + h2p) < 360)) {return (h1p + h2p + 360) / 2.0}
+  else if ((abs(h1p - h2p) > 180) && ((h1p + h2p) >= 360)) {return (h1p + h2p - 360) / 2.0}
+  else {throw (new Error())}
 }
 
 /**

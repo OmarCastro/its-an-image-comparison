@@ -21,12 +21,12 @@ function rgbToXyz (c) {
   let G = (c.G / 255)
   let B = (c.B / 255)
 
-  if (R > 0.04045) R = pow(((R + 0.055) / 1.055), 2.4)
-  else R = R / 12.92
-  if (G > 0.04045) G = pow(((G + 0.055) / 1.055), 2.4)
-  else G = G / 12.92
-  if (B > 0.04045) B = pow(((B + 0.055) / 1.055), 2.4)
-  else B = B / 12.92
+  if (R > 0.04045) {R = pow(((R + 0.055) / 1.055), 2.4)}
+  else {R = R / 12.92}
+  if (G > 0.04045) {G = pow(((G + 0.055) / 1.055), 2.4)}
+  else {G = G / 12.92}
+  if (B > 0.04045) {B = pow(((B + 0.055) / 1.055), 2.4)}
+  else {B = B / 12.92}
 
   R *= 100
   G *= 100
@@ -53,12 +53,12 @@ export function xyzToLab (c) {
   let Y = c.Y / refY
   let Z = c.Z / refZ
   let X = c.X / refX
-  if (X > 0.008856) X = pow(X, 1 / 3)
-  else X = (7.787 * X) + (16 / 116)
-  if (Y > 0.008856) Y = pow(Y, 1 / 3)
-  else Y = (7.787 * Y) + (16 / 116)
-  if (Z > 0.008856) Z = pow(Z, 1 / 3)
-  else Z = (7.787 * Z) + (16 / 116)
+  if (X > 0.008856) {X = pow(X, 1 / 3)}
+  else {X = (7.787 * X) + (16 / 116)}
+  if (Y > 0.008856) {Y = pow(Y, 1 / 3)}
+  else {Y = (7.787 * Y) + (16 / 116)}
+  if (Z > 0.008856) {Z = pow(Z, 1 / 3)}
+  else {Z = (7.787 * Z) + (16 / 116)}
   const L = (116 * Y) - 16
   const a = 500 * (X - Y)
   const b = 200 * (Y - Z)

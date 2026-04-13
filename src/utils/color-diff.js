@@ -109,7 +109,7 @@ export function calculateDiff ({
 
   if (identical) { // fast path if identical
     if (output && !diffMask) {
-      for (let i = 0, len = width * height; i < len; i++) drawGrayPixel(img1, 4 * i, alpha, output)
+      for (let i = 0, len = width * height; i < len; i++) {drawGrayPixel(img1, 4 * i, alpha, output)}
     }
     return {
       diffPixelAmount: 0,
@@ -197,7 +197,7 @@ function antialiased (img, x1, y1, width, height, img2) {
   // go through 8 adjacent pixels
   for (let x = x0; x <= x2; x++) {
     for (let y = y0; y <= y2; y++) {
-      if (x === x1 && y === y1) continue
+      if (x === x1 && y === y1) {continue}
 
       // brightness delta between the center pixel and adjacent one
       const { delta } = colorDeltaImgPosition(img, img, pos, (y * width + x) * 4, 'Brightness')
@@ -206,7 +206,7 @@ function antialiased (img, x1, y1, width, height, img2) {
       if (delta === 0) {
         zeroes++
         // if found more than 2 equal siblings, it's definitely not anti-aliasing
-        if (zeroes > 2) return false
+        if (zeroes > 2) {return false}
 
         // remember the darkest pixel
       } else if (delta < min) {
@@ -224,7 +224,7 @@ function antialiased (img, x1, y1, width, height, img2) {
   }
 
   // if there are no both darker and brighter pixels among siblings, it's not anti-aliasing
-  if (min === 0 || max === 0) return false
+  if (min === 0 || max === 0) {return false}
 
   // if either the darkest or the brightest pixel has 3+ equal siblings in both images
   // (definitely not anti-aliased), this pixel is anti-aliased
@@ -252,15 +252,15 @@ function hasManySiblings (img, x1, y1, width, height) {
   // go through 8 adjacent pixels
   for (let x = x0; x <= x2; x++) {
     for (let y = y0; y <= y2; y++) {
-      if (x === x1 && y === y1) continue
+      if (x === x1 && y === y1) {continue}
 
       const pos2 = (y * width + x) * 4
       if (img[pos] === img[pos2] &&
                 img[pos + 1] === img[pos2 + 1] &&
                 img[pos + 2] === img[pos2 + 2] &&
-                img[pos + 3] === img[pos2 + 3]) zeroes++
+                img[pos + 3] === img[pos2 + 3]) {zeroes++}
 
-      if (zeroes > 2) return true
+      if (zeroes > 2) {return true}
     }
   }
 
