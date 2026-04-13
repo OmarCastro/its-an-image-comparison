@@ -111,7 +111,7 @@ const config = {
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'buildfiles/run test-server',
+    command: 'dev-tools/run test-server',
     port: 8182,
   },
 }

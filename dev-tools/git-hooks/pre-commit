@@ -1,0 +1,2 @@
+#!/bin/sh
+exec dev-tools/run pre-commit-check

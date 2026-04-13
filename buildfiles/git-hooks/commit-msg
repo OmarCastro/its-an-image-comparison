@@ -1,2 +1,0 @@
-#!/bin/sh
-exec buildfiles/run commit-msg-check $1
