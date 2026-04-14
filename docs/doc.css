@@ -9,6 +9,7 @@
     --resizable-border-color: #303540;
     --tab-active-color: #007299;
     --even-tr-bg: #00000008;
+    --table-row-col-hover-bg: #ccc;
     font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
 }
 
@@ -25,6 +26,7 @@
         --resizable-border-color: #dddcdf;
         --tab-active-color: #fa5;
         --even-tr-bg: #ffffff08;
+        --table-row-col-hover-bg: #404550;
     }
 
     a { color: #6ad; }
@@ -354,6 +356,16 @@ table, th, td {
 table tr:nth-child(2n){
     background-color: var(--even-tr-bg);
 }
+
+table:has(:is(td, th):nth-child(1):hover) col:nth-child(1),
+table:has(:is(td, th):nth-child(2):hover) col:nth-child(2),
+table:has(:is(td, th):nth-child(3):hover) col:nth-child(3),
+table:has(:is(td, th):nth-child(4):hover) col:nth-child(4),
+table:has(:is(td, th):nth-child(5):hover) col:nth-child(5),
+table tr:hover {
+    background-color: var(--table-row-col-hover-bg);
+}
+
 
 .screenshots {
     display: flex;
