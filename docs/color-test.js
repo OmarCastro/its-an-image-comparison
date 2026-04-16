@@ -66,9 +66,9 @@ function calculateDeltaTable (rgb1, rgb2, locationResult) {
   results.forEach(result => {
       const row = document.importNode(rowTemplate.content, true)
       row.querySelector(".col-algorithm").textContent = result.algorithm
-      row.querySelector(".col-delta").textContent = result.delta
-      row.querySelector(".col-max-delta").textContent = result.maxDelta
-      row.querySelector(".col-theshold").textContent = result.theshold
+      row.querySelector(".col-delta").textContent = result.delta.toFixed(4)
+      row.querySelector(".col-max-delta").textContent = result.maxDelta.toFixed(4)
+      row.querySelector(".col-theshold").textContent = result.theshold.toFixed(4)
       tableTBody.append(row)
   })
   locationResult.append(table)

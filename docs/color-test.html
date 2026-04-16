@@ -39,43 +39,24 @@
         </h1>
 
 
-        <section class="section section--badge">
-            <a href="https://github.com/OmarCastro/its-an-image-comparison/blob/master/LICENSE" title="View license on repository" p-aria-label>
-                <img src="reports/license-badge-a11y.svg" p-size p-badge-attrs="-title"></img>
-            </a>
-            <a href="reports/playwright-report" title="Show test results" p-aria-label>
-                <img src="reports/test-results/test-results-badge-a11y.svg" p-size p-badge-attrs="-title"></img>
-            </a>
-            <a href="reports/coverage/final" title="Show test code coverage information" p-aria-label>
-                <img src="reports/coverage/unit/coverage-badge-a11y.svg" p-size p-badge-attrs="-title"></img>
-            </a>
-            <a href="https://github.com/OmarCastro/its-an-image-comparison" title="View code repository" p-aria-label>
-            </a>
-            <a href="https://github.com/OmarCastro/its-an-image-comparison/releases/latest" title="View release notes" p-aria-label>
-            </a>
-
-        </section>
-
         <section class="section section--examples">
-
-
 
             <h2> Examples </h2>
 
             <template class="result-algorithms-table">
                 <table>
+                    <colgroup>
+                        <col class="col-algorithm"/>
+                        <col class="col-delta"/>
+                        <col class="col-max-delta"/>
+                        <col class="col-theshold"/>
+                    </colgroup>
                     <thead>
-                        <colgroup>
-                            <col class="col-algorithm"/>
-                            <col class="col-delta"/>
-                            <col class="col-max-delta"/>
-                            <col class="col-theshold"/>
-                        </colgroup>
                         <tr>
-                            <th>Algorithm</th>
-                            <th>delta</th>
-                            <th>maxDelta</th>
-                            <th>theshold value</th>
+                            <th scope="col">Algorithm</th>
+                            <th scope="col">delta</th>
+                            <th scope="col">maxDelta</th>
+                            <th scope="col">theshold value</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -86,7 +67,7 @@
 
             <template class="result-algorithms-table-row">
                 <tr>
-                    <th class="col-algorithm"></th>
+                    <th class="col-algorithm" scope="row"></th>
                     <td class="col-delta"></th>
                     <td class="col-max-delta"></th>
                     <td class="col-theshold"></th>
