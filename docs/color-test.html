@@ -44,6 +44,21 @@
             <h2> Examples </h2>
 
             <template class="result-algorithms-table">
+                <style>
+                    @scope {
+                        .col-algorithm {
+                            text-align: left;
+                        }
+                        .col-delta, .col-max-delta, .col-theshold {
+                            text-align: right; 
+                            td& { 
+                                font-family: monospace;
+                                font-size: 1.2em;
+                            }
+                        }
+
+                    }
+                </style>
                 <table>
                     <colgroup>
                         <col class="col-algorithm"/>
@@ -53,10 +68,10 @@
                     </colgroup>
                     <thead>
                         <tr>
-                            <th scope="col">Algorithm</th>
-                            <th scope="col">delta</th>
-                            <th scope="col">maxDelta</th>
-                            <th scope="col">theshold value</th>
+                            <th scope="col" class="col-algorithm">Algorithm</th>
+                            <th scope="col" class="col-delta">Delta</th>
+                            <th scope="col" class="col-max-delta">Max delta</th>
+                            <th scope="col" class="col-theshold">Threshold</th>
                         </tr>
                     </thead>
                     <tbody>

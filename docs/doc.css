@@ -9,7 +9,8 @@
     --resizable-border-color: #303540;
     --tab-active-color: #007299;
     --even-tr-bg: #00000008;
-    --table-row-col-hover-bg: #ccc;
+    --table-cell-border-color: #aaa;
+    --table-cell-separator-color: #a16060;
     font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
 }
 
@@ -26,7 +27,8 @@
         --resizable-border-color: #dddcdf;
         --tab-active-color: #fa5;
         --even-tr-bg: #ffffff08;
-        --table-row-col-hover-bg: #404550;
+        --table-cell-border-color: #555;
+        --table-cell-separator-color: #583c64;
     }
 
     a { color: #6ad; }
@@ -343,27 +345,77 @@ pre:hover code span[contenteditable="true"]::before {
     max-width: 100%;
 }
 
-th, td {
-    padding: 0.2em;
+table {
+    border-collapse: collapse;
+    --table-cell-hover-hline-color: transparent;
+    --table-cell-hover-vline-color: transparent;
 }
 
-table, th, td {
-    border-collapse: collapse;
-    border: 1px solid var(--sidebar-border-color);
+th, td {
     padding: 0.3em 1em;
+    position: relative;
 }
 
 table tr:nth-child(2n){
     background-color: var(--even-tr-bg);
 }
 
-table:has(:is(td, th):nth-child(1):hover) col:nth-child(1),
-table:has(:is(td, th):nth-child(2):hover) col:nth-child(2),
-table:has(:is(td, th):nth-child(3):hover) col:nth-child(3),
-table:has(:is(td, th):nth-child(4):hover) col:nth-child(4),
-table:has(:is(td, th):nth-child(5):hover) col:nth-child(5),
-table tr:hover {
-    background-color: var(--table-row-col-hover-bg);
+table:hover col {
+    anchor-name: --table-col-hover;
+}
+tbody :is(td, th):hover {
+    anchor-name: --table-cell-hover;
+}
+tbody :is(td, th):hover::before,
+tbody :is(td, th):hover::after {
+    position: fixed;
+    content: '';
+    pointer-events: none;
+    border: 1px solid transparent;
+    border-color: var(--table-cell-border-color);
+}
+
+tbody :is(td, th):hover::before {
+    top: anchor(--table-col-hover top);
+    bottom: anchor(--table-cell-hover top);
+    left: anchor(--table-cell-hover left);
+    right: anchor(--table-cell-hover right);
+    border-bottom:none;
+}
+
+tbody :is(td, th):hover::after {
+    top: anchor(--table-cell-hover bottom);
+    bottom: anchor(--table-col-hover bottom);
+    left: anchor(--table-cell-hover left);
+    right: anchor(--table-cell-hover right);
+    border-top:none;
+}
+
+
+tr {
+    position: relative;
+    &::before {
+        position: absolute;
+        inset: 0;
+        content: '';
+        pointer-events: none;
+        border: 1px solid transparent;
+    }
+    tbody > &:hover::before {
+        border-color: var(--table-cell-border-color);
+    }
+}
+
+thead th {
+    border-bottom: 2px solid var(--table-cell-separator-color);
+}
+
+th[scope="row"] {
+    border-right: 2px solid var(--table-cell-separator-color);
+}
+
+tr:hover th[scope="row"] {
+    border-right-color: transparent;
 }
 
 
