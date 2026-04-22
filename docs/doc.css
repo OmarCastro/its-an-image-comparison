@@ -347,8 +347,6 @@ pre:hover code span[contenteditable="true"]::before {
 
 table {
     border-collapse: collapse;
-    --table-cell-hover-hline-color: transparent;
-    --table-cell-hover-vline-color: transparent;
 }
 
 th, td {
@@ -371,7 +369,7 @@ tbody :is(td, th):hover::after {
     position: fixed;
     content: '';
     pointer-events: none;
-    border: 1px solid transparent;
+    border: 2px solid transparent;
     border-color: var(--table-cell-border-color);
 }
 
@@ -399,7 +397,7 @@ tr {
         inset: 0;
         content: '';
         pointer-events: none;
-        border: 1px solid transparent;
+        border: 2px solid transparent;
     }
     tbody > &:hover::before {
         border-color: var(--table-cell-border-color);
