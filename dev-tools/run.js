@@ -388,6 +388,9 @@ async function buildTest () {
   await writeFile('reports/module-graph.json', JSON.stringify(metafile, null, 2))
   const svg = await createModuleGraphSvg(metafile)
   await writeFile('reports/module-graph.svg', svg)
+    const svgElk = await createModuleGraphSvgElk(metafile)
+  await writeFile('reports/module-graph.elk.svg', svgElk)
+
   logStage('build test page html')
 
   await exec(`${process.argv[0]} ${pathFromDevTools('scripts/build-html.js')} test-page.html`)
@@ -1582,7 +1585,7 @@ async function createModuleGraphSvg (moduleGrapnJson) {
   const graph = new graphlib.Graph()
 
   // Set an object for the graph label
-  graph.setGraph({ rankdir: 'LR', edgesep: 30, ranksep: 60 })
+  graph.setGraph({ rankdir: 'TB', edgesep: 30, ranksep: 60 })
 
   // Default to assigning a new object as a label for each new edge.
   graph.setDefaultEdgeLabel(function () { return {} })
@@ -1651,6 +1654,116 @@ async function createModuleGraphSvg (moduleGrapnJson) {
   <g fill="#555" stroke="#fff" shape-rendering="geometricPrecision">${inputsSvg.map(({ rect: _ }) => _).join('')}</g>
   <g font-family="Helvetica,sans-serif" text-rendering="geometricPrecision" font-size="11" dominant-baseline="middle" text-anchor="middle">
   ${inputsSvg.map(({ text: _ }) => _).join('')}
+  </g>
+  </svg>`
+}
+
+async function createModuleGraphSvgElk (moduleGrapnJson) {
+  const { default: Elk } = await import('elkjs')
+  const { default: anafanafo } = await import('anafanafo')
+  const padding = 5
+  const svgStokeMargin = 5
+  const inputs = moduleGrapnJson.inputs
+  const elk = new Elk()
+  const graph = {
+   id: "root",
+   layoutOptions: { 
+    'elk.algorithm': 'layered',
+    'elk.direction': "DOWN",
+    'spacing.nodeNode': 70,
+    'spacing.nodeNodeBetweenLayers': 25,
+    'spacing.edgeNode': 25,
+    'spacing.edgeNodeBetweenLayers': 20,
+    'spacing.edgeEdge': 20,
+    'spacing.edgeEdgeBetweenLayers': 15,
+    'crossingMinimization.semiInteractive': true,
+    'nodePlacement.strategy': 'NETWORK_SIMPLEX',
+    'org.eclipse.elk.edgeRouting': "SPLINES",
+    'layered.options.SplineRoutingMode': "SLOPPY"
+
+  },
+   children: [
+   ],
+   edges: [
+   ]
+ }
+
+  const inputsNodeMetrics = Object.fromEntries(
+    Object.entries(inputs).map(([file]) => {
+      const textWidthPx = anafanafo(file, { font: 'bold 11px Helvetica' })
+      const textHeighthPx = 11
+      const height = textHeighthPx + padding * 2
+      const width = textWidthPx + padding * 2
+      const childData = {id: file, label: file, width: width + svgStokeMargin, height: height + svgStokeMargin }
+      graph.children.push(childData)
+      return [file, {
+        textWidthPx, textHeighthPx, height, width, childData
+      }]
+    }),
+  )
+
+  Object.entries(inputs).forEach(([file, info], id) => {
+    const { imports } = info
+    imports.forEach(({ path }) => graph.edges.push({id: `e${id}`, sources: [file], targets: [path] }))
+  })
+
+      console.log(await elk.layout(graph))
+
+  let maxWidth = 0
+  let maxHeight = 0
+
+  const inputsSvg = Object.entries(inputs).map(([file]) => {
+    const { childData } = inputsNodeMetrics[file]
+    const { x, y, height, width } = childData
+    maxWidth = Math.max(maxWidth, x + width)
+    maxHeight = Math.max(maxHeight, y + height)
+    return {
+      text: `<text x="${x + width / 2}" y="${y + height / 2}">${file}</text>`,
+      rect: `<rect rx="4" ry="4" width="${width}" x="${x}" y="${y}" height="${height}"/>`,
+    }
+  })
+
+  const lineArrowMarker = '<marker id="arrowhead" viewBox="0 0 10 10" refX="8" refY="5" markerUnits="strokeWidth" markerWidth="10" markerHeight="10" orient="auto">' +
+    '<path d="M 0 0 L 10 5 L 0 10 L 2 5 z" /></marker>'
+  const marker = graph.edges.length > 0 ? lineArrowMarker : ''
+  const defs = marker ? `<defs>${marker}</defs>` : ''
+
+  const inputsLinesSvg = graph.edges.map(e => {
+    console.log(e.sections)
+    const section = e.sections[0]
+    const allPoints = [
+      section.startPoint,
+      ...(section.bendPoints ?? []),
+      section.endPoint,
+    ]
+    const points = allPoints.map(({ x, y }) => `${x},${y}`).join(' ')
+    return `
+    <polyline class="outer" stroke-width="3" points="${points}"/>
+    <polyline points="${points}" marker-end="url(#arrowhead)"/>
+    <polyline points="${points}"/>`
+  })
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" role="img" aria-label="NPM: 0.4.0" viewBox="0 0 ${maxWidth} ${maxHeight}">
+  <style>
+    text { fill: #222; }
+    rect { fill: #ddd; stroke: #222 }
+    polyline {stroke: #ddd; stroke-linejoin: round}
+    polyline.outer {stroke: #222;}
+    #arrowhead path {stroke: #222; fill: #ddd; stroke-linejoin: round}
+    @media (prefers-color-scheme: dark) {
+      text { fill: #eee; }
+      rect { fill: #444; stroke:#eee }
+      polyline {stroke: #222; }
+      polyline.outer {stroke: #eee;}
+      #arrowhead path {stroke: #eee; fill: #222; }
+    }</style>
+  <title>Module graph</title>${defs}
+  <g shape-rendering="geometricPrecision" fill="none" >${inputsLinesSvg}</g>
+  <g fill="#555" stroke="#fff" shape-rendering="geometricPrecision">
+  ${inputsSvg.map(({ rect: _ }) => _).join('\n')}
+  </g>
+  <g font-family="Helvetica,sans-serif" text-rendering="geometricPrecision" font-size="11" dominant-baseline="middle" text-anchor="middle">
+  ${inputsSvg.map(({ text: _ }) => _).join('\n')}
   </g>
   </svg>`
 }
