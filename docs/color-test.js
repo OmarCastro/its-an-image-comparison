@@ -18,6 +18,25 @@ document.querySelectorAll('.rgb-test').forEach(testEl => {
   calculateDeltaTable(rgb1, rgb2, testEl.querySelector('.result-algoritms'))
 })
 
+document.querySelectorAll('.rgb-tester').forEach(testEl => {
+  const block1 = testEl.querySelector(':scope .color-1 > color-wheel')
+  const block2 = testEl.querySelector(':scope .color-2 > color-wheel')
+
+  const block1Input = testEl.querySelector(':scope .color-1 > input')
+  const block2Input = testEl.querySelector(':scope .color-2 > input')
+
+  block1Input.addEventListener("input", (event) => {
+    block1.value = event.target.valueAsNumber
+  })
+
+  block2Input.addEventListener("input", (event) => {
+    block2.value = event.target.valueAsNumber
+  })
+
+
+})
+
+
 
 
 /**

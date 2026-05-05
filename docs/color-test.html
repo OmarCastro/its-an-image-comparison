@@ -6,6 +6,7 @@
         <meta name="keywords" content="its-an-image-comparison image comparison documentation">
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width">
+        <script type="module" src="https://omarcastro.github.io/its-a-color-wheel/dist/color-wheel.element.min.js?named=color-wheel" async=""></script>
         <script type="module" src="dist/image-comparison.element.min.js?named=image-comparison" async></script>
         <script type="module" src="color-test.js" async></script>
         <link rel="stylesheet" href="code-example.css" p-inline>
@@ -16,6 +17,11 @@
                 width: 2em;
                 height: 2em;
                 background-color: var(--bg);
+            }
+
+            .rgb-tester > .colors > div {
+                display: inline-flex;
+                flex-direction:column;
             }
         </style>
     </head>
@@ -88,6 +94,20 @@
                     <td class="col-theshold"></th>
                 </tr>
             </template>
+
+            <div class="rgb-tester">
+                <div class="colors">
+                    <div class="color-1">
+                        <color-wheel class="color-wheel" value="100"></color-wheel>
+                        <input class="color-wheel-value" type="range" max="100" min="0" value="100"/>
+                    </div>
+                    <div class="color-2">
+                        <color-wheel class="color-wheel" value="100"></color-wheel>
+                        <input class="color-wheel-value" type="range" max="100" min="0" value="100">
+                    </div>
+                </div>
+                <div class="result-algoritms"></div>
+            </div>
 
 
             <div class="rgb-test">
