@@ -19,9 +19,24 @@
                 background-color: var(--bg);
             }
 
+            .rgb-tester > .colors {
+                display: inline-flex;
+                flex-direction:row;
+            }
+
             .rgb-tester > .colors > div {
                 display: inline-flex;
-                flex-direction:column;
+                flex-direction:row;
+            }
+
+            .rgb-tester table {
+                margin: auto;
+            }
+
+            .color-wheel-value {
+                writing-mode: vertical-lr;
+                direction: rtl;
+                vertical-align: middle;
             }
         </style>
     </head>
@@ -98,8 +113,8 @@
             <div class="rgb-tester">
                 <div class="colors">
                     <div class="color-1">
-                        <color-wheel class="color-wheel" value="100"></color-wheel>
                         <input class="color-wheel-value" type="range" max="100" min="0" value="100"/>
+                        <color-wheel class="color-wheel" value="100"></color-wheel>
                     </div>
                     <div class="color-2">
                         <color-wheel class="color-wheel" value="100"></color-wheel>

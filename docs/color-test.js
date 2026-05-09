@@ -1,3 +1,4 @@
+import convert from 'color-convert'
 import { colorDelta, validAlgorithms } from '../src/utils/color-delta.js'
 /** @import {rgbcolor} from '../src/utils/color-types.d.js' */
 /** @import {Algorithm} from '../src/utils/color-delta.js' */
@@ -18,26 +19,52 @@ document.querySelectorAll('.rgb-test').forEach(testEl => {
   calculateDeltaTable(rgb1, rgb2, testEl.querySelector('.result-algoritms'))
 })
 
-document.querySelectorAll('.rgb-tester').forEach(testEl => {
-  const block1 = testEl.querySelector(':scope .color-1 > color-wheel')
-  const block2 = testEl.querySelector(':scope .color-2 > color-wheel')
+customElements.whenDefined("color-wheel").then(() => {
+  document.querySelectorAll('.rgb-tester').forEach(testEl => {
+    const block1 = testEl.querySelector(':scope .color-1 > color-wheel')
+    const block2 = testEl.querySelector(':scope .color-2 > color-wheel')
 
-  const block1Input = testEl.querySelector(':scope .color-1 > input')
-  const block2Input = testEl.querySelector(':scope .color-2 > input')
+    const block1Input = testEl.querySelector(':scope .color-1 > input')
+    const block2Input = testEl.querySelector(':scope .color-2 > input')
+    handleBlockSliderChange(block1Input)
+    handleBlockSliderChange(block2Input)
+    updateAlgorithmTable()
 
-  block1Input.addEventListener("input", (event) => {
-    block1.value = event.target.valueAsNumber
+    function updateAlgorithmTable(){
+      const rgbBlock1 = convert.hsv.rgb(block1.hue, block1.saturation, block1.value)
+      const rgbBlock2 = convert.hsv.rgb(block2.hue, block2.saturation, block2.value)
+      calculateDeltaTable(
+        {r: rgbBlock1[0], g: rgbBlock1[1], b: rgbBlock1[2]},
+        {r: rgbBlock2[0], g: rgbBlock2[1], b: rgbBlock2[2]},
+        testEl.querySelector('.result-algoritms')
+      )
+
+    }
+    function handleBlockColorChange() {
+      updateAlgorithmTable()
+    }
+
+    function handleBlockColorChangeEvent(){
+      handleBlockColorChange()
+    }
+
+    block1.addEventListener("input", handleBlockColorChangeEvent)
+    block2.addEventListener("input", handleBlockColorChangeEvent)
+
+    function handleBlockSliderChange(slider){
+      const block = slider.parentElement.querySelector('color-wheel')
+      block.value = slider.valueAsNumber
+      handleBlockColorChange()
+    }
+
+    function handleBlockSliderChangeEvent(event){
+      handleBlockSliderChange(event.target)
+    }
+
+    block1Input.addEventListener("input", handleBlockSliderChangeEvent)
+    block2Input.addEventListener("input", handleBlockSliderChangeEvent)
   })
-
-  block2Input.addEventListener("input", (event) => {
-    block2.value = event.target.valueAsNumber
-  })
-
-
 })
-
-
-
 
 /**
  * @param {rgbcolor} rgb1 - first target color
@@ -61,7 +88,6 @@ function calculateDelta (rgb1, rgb2, algorithm, locationResult) {
 /**
  * @param {rgbcolor} rgb1 - first target color
  * @param {rgbcolor} rgb2 - second target color
- * @param {Algorithm} algorithm - algorithm to use
  *  @param {Element} locationResult - location where to put the result
  */
 function calculateDeltaTable (rgb1, rgb2, locationResult) {
@@ -90,7 +116,7 @@ function calculateDeltaTable (rgb1, rgb2, locationResult) {
       row.querySelector(".col-theshold").textContent = result.theshold.toFixed(4)
       tableTBody.append(row)
   })
-  locationResult.append(table)
+  locationResult.replaceChildren(table)
 }
 
 /**
