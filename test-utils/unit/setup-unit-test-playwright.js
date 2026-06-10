@@ -3,6 +3,7 @@ const { window, resetDom } = await import('./fixtures/dom.unit.fixture.js')
 const { setup: setupFetchMock, teardown: teardownFetchMock } = await import('./fixtures/fetch.unit.fixture.js')
 const { setup: setupTimezoneMock, teardown: teardownTimezoneMock } = await import('./fixtures/timezone.unit.fixture.js')
 const { setup: setupGCFixture } = await import('./fixtures/garbage-collector.unit.fixture.js')
+const { setup: setupConsoleFixture, teardown: teardownConsoleFixture } = await import('./fixtures/console.unit.fixture.js')
 
 export const expect = baseExpect
 
@@ -22,6 +23,11 @@ export const test = base.extend({
     const api = setupFetchMock()
     await use(api)
     teardownFetchMock()
+  },
+  console: async ({}, use) => {
+    const api = setupConsoleFixture()
+    await use(api)
+    teardownConsoleFixture()
   },
   timezone: async ({}, use) => {
     const api = setupTimezoneMock()

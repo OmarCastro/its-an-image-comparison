@@ -4,6 +4,7 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
   const { setup: setupFetchMock, teardown: teardownFetchMock } = await import('./fixtures/fetch.unit.fixture.js')
   const { setup: setupTimezoneMock, teardown: teardownTimezoneMock } = await import('./fixtures/timezone.unit.fixture.js')
   const { setup: setupGCFixture } = await import('./fixtures/garbage-collector-browser.unit.fixture.js')
+  const { setup: setupConsoleFixture, teardown: teardownConsoleFixture } = await import('./fixtures/console.unit.fixture.js')
 
   /**
    * @param {string} message - message to show on the report on skip
@@ -60,7 +61,7 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
     const timeMetrics = {
       pageLoad: performance.timeOrigin,
       testDuration: endTestTimestamp - startTestTimestamp,
-      testDurationSinceLoad: endTestTimestamp
+      testDurationSinceLoad: endTestTimestamp,
     }
 
     console.log({ ...globalThis[Symbol.for('unit-test-info')], endTestTimestamp })
@@ -74,7 +75,7 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
       skipped: skippedTestAmount,
       passed: testedAmount - failedTestAmount,
       tapReport: tapReport.join('\n'),
-      timeMetrics
+      timeMetrics,
     })
   }
 
@@ -112,9 +113,14 @@ globalThis[Symbol.for('custom-unit-test-setup')] = async function setupUnitTests
               postTestCallbacks.add(teardownTimezoneMock)
               return fixtureCache.timezone
             },
+            get console () {
+              fixtureCache.console ??= setupConsoleFixture()
+              postTestCallbacks.add(teardownConsoleFixture)
+              return fixtureCache.console
+            },
             get gc () {
               fixtureCache.gc ??= setupGCFixture()
-              if(!fixtureCache.gc.enabled){
+              if (!fixtureCache.gc.enabled) {
                 skip(fixtureCache.gc.reason)
               }
               return fixtureCache.gc
@@ -166,24 +172,24 @@ async function reportLogs (report) {
     const tapDivs = report.tapReport.split('\n').map(line => {
       const div = createElement('div')
       const divClass = div.classList
-      if(line.startsWith("ok") && line.includes("# SKIP ")){
-        divClass.add("skipped")
-      } else if(line.startsWith("ok")){
-        divClass.add("passed")
-      } else if(line.startsWith("not ok")){
-        divClass.add("failed")
-      } else if(/[0-9]+\.\.[0-9]+/.test(line)){
-        divClass.add("plan")
+      if (line.startsWith('ok') && line.includes('# SKIP ')) {
+        divClass.add('skipped')
+      } else if (line.startsWith('ok')) {
+        divClass.add('passed')
+      } else if (line.startsWith('not ok')) {
+        divClass.add('failed')
+      } else if (/[0-9]+\.\.[0-9]+/.test(line)) {
+        divClass.add('plan')
       }
 
-      if(line.includes("#")){
-        const [text, ...comms] = line.split("#")
-        const comments = comms.map(comm => "#" + comm).join('')
+      if (line.includes('#')) {
+        const [text, ...comms] = line.split('#')
+        const comments = comms.map(comm => '#' + comm).join('')
         div.textContent = text
         const span = createElement('span')
-        span.classList.add("comment")
+        span.classList.add('comment')
         span.textContent = comments
-        span.innerHTML = span.innerHTML.replaceAll(" SKIP ", " <b>SKIP</b> ")
+        span.innerHTML = span.innerHTML.replaceAll(' SKIP ', ' <b>SKIP</b> ')
         div.append(span)
       } else {
         div.textContent = line
@@ -192,8 +198,8 @@ async function reportLogs (report) {
     })
 
     const wrapLogs = (...content) => {
-        const div = createElement('div')
-    div.innerHTML = `
+      const div = createElement('div')
+      div.innerHTML = `
       <style>
     @scope {
       font-family:monospace;
@@ -210,11 +216,11 @@ async function reportLogs (report) {
     }
   </style>
     `
-    div.append(...content)
+      div.append(...content)
       return div
     }
     const tapReportDiv = wrapLogs(...tapDivs)
-    tapReportDiv.classList.add("tap-report")
+    tapReportDiv.classList.add('tap-report')
 
     const logDivs = report.logs.split('\n').map(log => {
       const div = createElement('div')
@@ -226,7 +232,7 @@ async function reportLogs (report) {
 
     const summaryDivs = `
 Tests
-        Result: ${report.failed > 0 ? "FAIL" : "PASS"}
+        Result: ${report.failed > 0 ? 'FAIL' : 'PASS'}
         Failed: ${report.failed}
         Passed: ${report.passed}
       Executed: ${report.tested}
@@ -238,13 +244,13 @@ Time Metrics
         Full test duration: ${report.timeMetrics.testDuration} milliseconds
   Duration since page load: ${report.timeMetrics.testDurationSinceLoad} milliseconds
     `.split('\n').map(log => {
-      const pre = createElement('pre')
-      pre.classList.toggle("passed", log.includes("PASS"))
-      pre.classList.toggle("failed", log.includes("FAIL"))
-      pre.textContent = log || " "
-      pre.style.margin = "0"
-      return pre
-    })
+    const pre = createElement('pre')
+    pre.classList.toggle('passed', log.includes('PASS'))
+    pre.classList.toggle('failed', log.includes('FAIL'))
+    pre.textContent = log || ' '
+    pre.style.margin = '0'
+    return pre
+  })
 
     const summaryReportDiv = wrapLogs(...summaryDivs)
 
@@ -258,9 +264,9 @@ Time Metrics
       return tabLogs
     }
     body.replaceChildren(
-      wrapIntoDetails("Summary", summaryReportDiv),
-      wrapIntoDetails("Logs", logReportDiv),
-      wrapIntoDetails("TAP report", tapReportDiv)
+      wrapIntoDetails('Summary', summaryReportDiv),
+      wrapIntoDetails('Logs', logReportDiv),
+      wrapIntoDetails('TAP report', tapReportDiv),
     )
   }
   const inIframe = window.self !== window.top
