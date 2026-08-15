@@ -20,6 +20,12 @@
   },
   "author": "Omar Castro",
   "license": "MIT",
+  "dependencies": {
+    "pngjs": "^7.0.0"
+  },
+  "bin": {
+    "its-an-image-comparison": "src/entrypoint/cli.js"
+  },
   "devDependencies": {
     "@codemirror/lang-javascript": "^6.2.5",
     "@codemirror/lang-json": "^6.0.2",

@@ -3,8 +3,8 @@ import { rgb2y } from './color-metrics.js'
 import { colorOrFallbackColorToRGBA } from './html-color-to-rgba.js'
 /** @import {Algorithm} from './color-delta.js' */
 
-export const fallbackAAColor = 'yellow'
-export const fallbackDiffColor = 'red'
+export const fallbackAAColor = '#ff0'
+export const fallbackDiffColor = '#f00'
 
 /**
  * @param {object} params - function parameters
