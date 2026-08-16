@@ -4,28 +4,38 @@ import { parseArgs } from 'node:util';
 
 const args = process.argv.slice(2)
 
+const newlinePad = "".padEnd(43)
 const options = /** @type {const} */({
-	'no-antialias': {
-		type: 'boolean',
-		short: 'A',
-		description: "by default, it will consider different pixels due to antialiasing to be equal, this flag disables it",
-	},
 	threshold: {
 		type: 'string',
 		short: 't',
-		default: "10",
-		description: "colors with distance below the threshold is considered equal",
+		default: "0",
+		description: "Sets a threshold in percents, colors with distance below the threshold are considered equal",
 		valueLabel: "num"
+	},
+	'antialias': {
+		type: 'boolean',
+		short: 'a',
+		description: "Activates antialias. When active it will consider different pixels due to antialiasing to be equal",
 	},
 	help: {
 		type: 'boolean',
 		short: 'h',
-		description: "only show this help and exit"
+		description: "Only show this help and exit"
 	},
 	verbose: {
 		type: 'boolean',
 		short: 'v',
-		description: "show verbose output, without it, only the amount of different pixels will be printed on stdout"
+		description: "Show verbose output, without it, only the amount of different pixels will be printed on stdout"
+	},
+	"output-format": {
+		type: 'string',
+		short: 'f',
+		description: `Output format, overrides --verbose. Interpreted sequences: 
+${newlinePad}%d   amount of different pixels;
+${newlinePad}%a   amount of antialias pixels;
+${newlinePad}%p   percentage of diff pixels compared to the total amount of pixels image;
+${newlinePad}%t   time spend calculating diff;  `
 	},
 });
 
@@ -40,29 +50,29 @@ Options:${Object.entries(options).map(([entry, option]) => {
 	${(shortParam+longParam).padEnd(30)} ${option.description}`
 }).join()}`
 
+const logInputErrorAndExit = (messageToLog) => {
+  console.error(messageToLog)
+	console.error()
+	console.error(help)
+	return process.exit(64)
+}
+
 let parsedArgs
 try {
 	parsedArgs = parseArgs({ args, options, allowPositionals: true })
 } catch (e) {
-	console.error(e instanceof Error ? e.message : e)
-	console.error()
-	console.error(help)
-	process.exit(64);
+	logInputErrorAndExit(e instanceof Error ? e.message : e);
 }
 
 const { values, positionals } = parsedArgs;
-
-if(positionals.length < 2){
-	console.error("Error: not enough parameters")
-  console.error()
-	console.error(help)
-	process.exit(64);
-}
 
 if(values.help){
 	console.log(help)
 	process.exit(0);
 }
+
+if(positionals.length < 2){ logInputErrorAndExit("Error: not enough parameters"); }
+if(isNaN(values.threshold)){ logInputErrorAndExit("Error: threshold must be a number between 0 and 100"); }
 
 const [img1Path, img2Path, diffPath] = positionals;
 
@@ -89,10 +99,9 @@ if (img2.width !== width || img2.height !== height) {
 
 const diff = diffPath ? new PNG({width, height}) : null;
 
-if(values.verbose){ console.time('matched in') }
-
 const {calculateDiff} = await import('../utils/color-diff.js');
 
+performance.mark("startDiffCalc")
 const result = calculateDiff({
 	img1: img1.data,
 	img2: img2.data,
@@ -100,17 +109,27 @@ const result = calculateDiff({
 	width,
 	height,
 	threshold: +(values.threshold ?? options.threshold.default),
-	antialias: !values["no-antialias"] 
+	antialias: values.antialias 
 })
-	
-if(values.verbose){
-	console.timeEnd('matched in')
-	console.log(`different pixels: ${result.diffPixelAmount}`);
-	console.log(`antialias pixels: ${result.aaPixelAmount}`);
-	console.log(`error: ${Math.round(100 * 100 * result.diffPixelAmount / (width * height)) / 100}%`);
-} else {
-	console.log(result.diffPixelAmount)
-}
+performance.mark("endDiffCalc")
+performance.measure("diffCalcDuration", "startDiffCalc", "endDiffCalc");
+const measure = performance.getEntriesByName("diffCalcDuration")[0]; 
+const time = measure.duration.toFixed(3); 
+
+const format = values['output-format'] || (values.verbose ? `matched in: %tms
+different pixels: %d
+antialias pixels: %a
+error: %p%%` : '%d')
+
+
+const textToLog = format
+	.replaceAll("%t", time)
+	.replaceAll("%d", result.diffPixelAmount)
+	.replaceAll("%a", result.aaPixelAmount)
+	.replaceAll("%p", Math.round(100 * 100 * result.diffPixelAmount / (width * height)) / 100)
+	.replaceAll("%%", "%")
+
+console.log(textToLog)
 
 if (diff) {
 	fs.writeFileSync(diffPath, PNG.sync.write(diff));
