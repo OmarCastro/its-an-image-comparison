@@ -32,10 +32,11 @@ const options = /** @type {const} */({
 		type: 'string',
 		short: 'f',
 		description: `Output format, overrides --verbose. Interpreted sequences: 
-${newlinePad}%d   amount of different pixels;
-${newlinePad}%a   amount of antialias pixels;
-${newlinePad}%p   percentage of diff pixels compared to the total amount of pixels image;
-${newlinePad}%t   time spend calculating diff;  `
+${newlinePad}%d   amount of different pixels
+${newlinePad}%a   amount of antialias pixels
+${newlinePad}%p   percentage of diff pixels compared to the total amount of pixels image
+${newlinePad}%t   time spend calculating diff
+${newlinePad}%%   literal %  `
 	},
 });
 
@@ -118,16 +119,17 @@ const time = measure.duration.toFixed(3);
 
 const format = values['output-format'] || (values.verbose ? `matched in: %tms
 different pixels: %d
-antialias pixels: %a
-error: %p%%` : '%d')
+${values.antialias ? "antialias pixels: %a\n" : ""
+}error: %p%%` : '%d')
 
-
-const textToLog = format
-	.replaceAll("%t", time)
-	.replaceAll("%d", result.diffPixelAmount)
-	.replaceAll("%a", result.aaPixelAmount)
-	.replaceAll("%p", Math.round(100 * 100 * result.diffPixelAmount / (width * height)) / 100)
-	.replaceAll("%%", "%")
+const match = {
+	"%t": time,
+  "%d": result.diffPixelAmount,
+	"%a": result.aaPixelAmount,
+	"%p": Math.round(100 * 100 * result.diffPixelAmount / (width * height)) / 100,
+	"%%": "%"
+}
+const textToLog = format.replaceAll(/%([tdap%])/g, matched => match[matched])
 
 console.log(textToLog)
 
