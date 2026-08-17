@@ -1,6 +1,6 @@
 {
   "name": "its-an-image-comparison",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "An image comparison web component",
   "main": "dist/esm/entrypoint/node.js",
   "type": "module",
