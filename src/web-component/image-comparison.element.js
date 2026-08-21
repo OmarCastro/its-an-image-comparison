@@ -41,6 +41,15 @@ const resizeObserver = new ResizeObserver((entries) => {
   }
 })
 
+/** 
+ * @typedef {object} ComponentData
+ * @property {Uint8ClampedArray} diffMap - difference map
+ * @property {string} [appliedDiffColor] - current diff color to use when rendering diff image
+ * @property {string} [appliedAAColor] - current anti-alias color to use when rendering diff image
+ * @property {ReturnType<typeof calculateDiff>} diffs - diff result
+ */
+
+/** @type {WeakMap<ImageComparisonElement, ComponentData | Record<PropertyKey, never>>} */
 const componentData = new WeakMap()
 
 export class ImageComparisonElement extends HTMLElement {
@@ -57,7 +66,6 @@ export class ImageComparisonElement extends HTMLElement {
     resizeObserver.observe(slider)
     shadowRoot.querySelector(leftImgSelector)?.addEventListener('load', () => this.updateCanvas())
     shadowRoot.querySelector(rightImgSelector)?.addEventListener('load', () => this.updateCanvas())
-    componentData.set(this, {})
     this.addEventListener('transitionstart', transitionstartEventHandler)
   }
 
@@ -125,11 +133,11 @@ export class ImageComparisonElement extends HTMLElement {
       const diff = context3.createImageData(width, height, { colorSpace: 'srgb' })
       const diffMap = new Uint8ClampedArray(width * height)
 
-      const data = componentData.get(this)
+      const data = componentData.getOrInsert(this, {})
 
       data.diffMap = diffMap
-      data.appliedAAColor = null
-      data.appliedDiffColor = null
+      data.appliedAAColor = undefined
+      data.appliedDiffColor = undefined
 
       data.diffs = calculateDiff({
         img1: img1.data,
@@ -153,11 +161,11 @@ export class ImageComparisonElement extends HTMLElement {
   }
 
   get diffPixelsAmount () {
-    return componentData.get(this).diffPixelAmount ?? NaN
+    return componentData.get(this)?.diffs?.diffPixelAmount ?? NaN
   }
 
   get antialiasedPixelsAmount () {
-    return componentData.get(this).aaPixelAmount ?? NaN
+    return componentData.get(this)?.diffs?.aaPixelAmount ?? NaN
   }
 
   get antialias () {
@@ -185,7 +193,7 @@ function transitionstartEventHandler (event) {
  * @param {ImageComparisonElement} component - component
  */
 function updateDiffColors (component) {
-  const data = componentData.get(component)
+  const data = componentData.getOrInsert(component, {})
 
   const { diffMap, appliedAAColor, appliedDiffColor } = data
   if (!diffMap) { return }
