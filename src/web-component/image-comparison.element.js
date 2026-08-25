@@ -43,6 +43,9 @@ const resizeObserver = new ResizeObserver((entries) => {
 
 /** 
  * @typedef {object} ComponentData
+ * 
+ * @property {OffscreenCanvas} img1Canvas - image 1 pixel data, stored as a one-dimensional array in the RGBA order.
+ * @property {OffscreenCanvas} img2Canvas - image 1 pixel data, stored as a one-dimensional array in the RGBA order.
  * @property {Uint8ClampedArray} diffMap - difference map
  * @property {string} [appliedDiffColor] - current diff color to use when rendering diff image
  * @property {string} [appliedAAColor] - current anti-alias color to use when rendering diff image
@@ -59,11 +62,16 @@ export class ImageComparisonElement extends HTMLElement {
     shadowRoot.adoptedStyleSheets = [loadStyles()]
     const template = loadTemplate()
     shadowRoot.append(document.importNode(template.content, true))
+    
     const slider = shadowRoot.querySelector('.comparison-slider')
     if (!slider) { return }
+    const diff = shadowRoot.querySelector('canvas.diff-image')
+    if (!diff) { return }
+
     addSliderDragBehavior(slider)
     intersectionObserver.observe(slider)
     resizeObserver.observe(slider)
+    addMagnifierBehavior(diff)
     shadowRoot.querySelector(leftImgSelector)?.addEventListener('load', () => this.updateCanvas())
     shadowRoot.querySelector(rightImgSelector)?.addEventListener('load', () => this.updateCanvas())
     this.addEventListener('transitionstart', transitionstartEventHandler)
@@ -135,6 +143,9 @@ export class ImageComparisonElement extends HTMLElement {
 
       const data = componentData.getOrInsert(this, {})
 
+      data.diffMap = diffMap
+      data.img1Canvas = offCanvas1
+      data.img2Canvas = offCanvas2
       data.diffMap = diffMap
       data.appliedAAColor = undefined
       data.appliedDiffColor = undefined
@@ -320,4 +331,116 @@ function addSliderDragBehavior (slider) {
       window.removeEventListener('pointermove', pointerMoveHandler)
     }, { once: true })
   })
+}
+
+/**
+ * Add magnifier behavior to diff image to easily see the difference
+ * @param {HTMLCanvasElement} diffCanvas - diff canvas element
+ */
+function addMagnifierBehavior (diffCanvas) {
+  const tooltip = diffCanvas.parentElement?.querySelector('div.glass-magnifier-tooltip')
+  const magnifier = tooltip?.querySelector('canvas.glass-magnifier')
+  const diffCanvasContext = diffCanvas.getContext('2d')
+  const [colorBox1, colorBox2] = tooltip?.querySelectorAll('div.color-box') ?? []
+  if(!tooltip || !magnifier || !diffCanvasContext || !colorBox1 || !colorBox2) { return }
+
+  const initScale = 1
+  let scale = initScale
+  magnifier.width = 450
+  magnifier.height = 150
+  const {width: magWidth, height: magHeight} = magnifier
+
+
+  /**
+   * @param {MouseEvent} event - pointer move event
+   */
+  const pointerMoveHandler = function (event) {
+    tooltip.style.transform = `translate(calc(${event.clientX}px - 50%), calc(${event.clientY}px - 50%))`
+    const magnifierContext = magnifier.getContext('2d')
+    if (!magnifierContext) { return }
+    magnifierContext.clearRect(0 , 0, magWidth, magHeight)
+    const mousePos = getMousePos(diffCanvas, event)
+    const rootNode = diffCanvas.getRootNode()
+    if(!(rootNode instanceof ShadowRoot)) { return }
+    const host = rootNode.host
+    if(!(host instanceof ImageComparisonElement)) { return }
+    const data = componentData.getOrInsert(host, {})
+
+
+    const width = magWidth / 3
+    const height = magHeight
+    const tooltipRect = tooltip.getBoundingClientRect()
+    var cs = getComputedStyle(tooltip);
+    const x = mousePos.x - (width * 0.5)/scale
+    const y = mousePos.y - ((tooltipRect.height) * 0.5 - parseFloat(cs.paddingTop) - parseFloat(cs.borderTopWidth)) / scale
+
+    const { img1Canvas, img2Canvas } = data
+    magnifierContext.imageSmoothingEnabled = false
+
+    magnifierContext.drawImage(img1Canvas, x, y, width, height, 0, 0, width*scale, height*scale)
+    magnifierContext.strokeRect(0, 0, width, height)
+    magnifierContext.clearRect(width , 0, magWidth, magHeight)
+    magnifierContext.drawImage(diffCanvas, x, y, width, height, width, 0, width*scale, height*scale)
+    magnifierContext.strokeRect(width, 0, width, height)
+    magnifierContext.clearRect(width*2 , 0, magWidth, magHeight)
+    magnifierContext.drawImage(img2Canvas, x, y, width, height, width*2, 0, width*scale, height*scale)
+    magnifierContext.strokeRect(width*2, 0, width, height)
+
+    const img1CanvasContext = img1Canvas.getContext('2d')
+    const img2CanvasContext = img2Canvas.getContext('2d')
+    if(!img1CanvasContext || !img2CanvasContext) {
+      return
+    }
+    
+    const img1PixelDataOnMousePosition = img1CanvasContext.getImageData(mousePos.x, mousePos.y, 1, 1, { colorSpace: 'srgb' })
+    const [r1, g1, b1, a1] = img1PixelDataOnMousePosition.data
+    colorBox1.style.backgroundColor = `rgba(${r1}, ${g1}, ${b1}, ${a1/255})`
+  
+  
+    const img2PixelDataOnMousePosition = img2CanvasContext.getImageData(mousePos.x, mousePos.y, 1, 1, { colorSpace: 'srgb' })
+    const [r2, g2, b2, a2] = img2PixelDataOnMousePosition.data
+    colorBox2.style.backgroundColor = `rgba(${r2}, ${g2}, ${b2}, ${a2/255})`
+
+
+    
+  }
+
+  magnifier.addEventListener('wheel', (event) => {
+    event.preventDefault()
+    const scaleup = event.deltaY < 0 ? 2 : 0.5
+    scale = Math.min(16, Math.max(initScale, scale * scaleup))
+    pointerMoveHandler(event)
+
+  })
+
+
+  diffCanvas.addEventListener('click', (event) => {
+    tooltip.showPopover()
+    pointerMoveHandler(event)
+    window.addEventListener('pointermove', pointerMoveHandler)
+
+    magnifier.addEventListener('click', () => {
+      scale = initScale
+      tooltip.hidePopover()
+      window.removeEventListener('pointermove', pointerMoveHandler)
+
+    }, { once: true })
+  })
+
+
+}
+
+  /**
+   * @param {HTMLCanvasElement} canvas - canvas
+   * @param {MouseEvent} event - pointer event
+   */
+function  getMousePos(canvas, event) {
+  var rect = canvas.getBoundingClientRect(), // abs. size of element
+    scaleX = canvas.width / rect.width,    // relationship bitmap vs. element for x
+    scaleY = canvas.height / rect.height;  // relationship bitmap vs. element for y
+
+  return {
+    x: (event.clientX - rect.left) * scaleX,   // scale mouse coordinates after they have
+    y: (event.clientY - rect.top) * scaleY     // been adjusted to be relative to element
+  }
 }
