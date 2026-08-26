@@ -1,6 +1,6 @@
 import html from './image-comparison.element.html'
 import css from './image-comparison.element.css'
-import { calculateDiff, fallbackAAColor, fallbackDiffColor } from '../utils/color-diff.js'
+import { calculateDiff, fallbackAAColor, fallbackDiffColor, getNormalizedDiffs } from '../utils/color-diff.js'
 import { colorOrFallbackColorToRGBA } from '../utils/html-color-to-rgba.js'
 
 let loadTemplate = () => {
@@ -342,9 +342,11 @@ function addMagnifierBehavior (diffCanvas) {
   const magnifier = tooltip?.querySelector('canvas.glass-magnifier')
   const diffCanvasContext = diffCanvas.getContext('2d')
   const [colorBox1, colorBox2] = tooltip?.querySelectorAll('div.color-box') ?? []
-  if(!tooltip || !magnifier || !diffCanvasContext || !colorBox1 || !colorBox2) { return }
+  const colorDiffInfo = tooltip?.querySelector('div.color-diff-info')
+  
+  if(!tooltip || !magnifier || !diffCanvasContext || !colorBox1 || !colorBox2 || !colorDiffInfo) { return }
 
-  const initScale = 1
+  const initScale = 2
   let scale = initScale
   magnifier.width = 450
   magnifier.height = 150
@@ -372,7 +374,7 @@ function addMagnifierBehavior (diffCanvas) {
     const tooltipRect = tooltip.getBoundingClientRect()
     var cs = getComputedStyle(tooltip);
     const x = mousePos.x - (width * 0.5)/scale
-    const y = mousePos.y - ((tooltipRect.height) * 0.5 - parseFloat(cs.paddingTop) - parseFloat(cs.borderTopWidth)) / scale
+    const y = mousePos.y - (tooltipRect.height * 0.5 - parseFloat(cs.paddingTop) - parseFloat(cs.borderTopWidth)) / scale
 
     const { img1Canvas, img2Canvas } = data
     magnifierContext.imageSmoothingEnabled = false
@@ -400,6 +402,17 @@ function addMagnifierBehavior (diffCanvas) {
     const img2PixelDataOnMousePosition = img2CanvasContext.getImageData(mousePos.x, mousePos.y, 1, 1, { colorSpace: 'srgb' })
     const [r2, g2, b2, a2] = img2PixelDataOnMousePosition.data
     colorBox2.style.backgroundColor = `rgba(${r2}, ${g2}, ${b2}, ${a2/255})`
+
+    const diffResult = getNormalizedDiffs({
+      img1: img1PixelDataOnMousePosition.data,
+      img2: img2PixelDataOnMousePosition.data,
+      width: 1, height: 1
+    })
+
+    const colorDistance = diffResult.diffMap[0]
+    colorDiffInfo.textContent = `color distance: ${colorDistance}%`
+
+
 
 
     
