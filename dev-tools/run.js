@@ -1707,7 +1707,7 @@ async function createModuleGraphSvgElk (moduleGrapnJson) {
     imports.forEach(({ path }) => graph.edges.push({id: `e${id}`, sources: [file], targets: [path] }))
   })
 
-      console.log(await elk.layout(graph))
+  await elk.layout(graph)
 
   let maxWidth = 0
   let maxHeight = 0
@@ -1729,7 +1729,6 @@ async function createModuleGraphSvgElk (moduleGrapnJson) {
   const defs = marker ? `<defs>${marker}</defs>` : ''
 
   const inputsLinesSvg = graph.edges.map(e => {
-    console.log(e.sections)
     const section = e.sections[0]
     const allPoints = [
       section.startPoint,
