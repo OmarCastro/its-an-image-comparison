@@ -352,12 +352,16 @@ function addMagnifierBehavior (diffCanvas) {
   magnifier.height = 150
   const {width: magWidth, height: magHeight} = magnifier
 
+  let isTooltipFollowingPointer = true
+
 
   /**
    * @param {MouseEvent} event - pointer move event
    */
   const pointerMoveHandler = function (event) {
-    tooltip.style.transform = `translate(calc(${event.clientX}px - 50%), calc(${event.clientY}px - 50%))`
+    if(isTooltipFollowingPointer){
+      tooltip.style.transform = `translate(calc(${event.clientX}px - 50%), calc(${event.clientY}px - 50%))`
+    }
     const magnifierContext = magnifier.getContext('2d')
     if (!magnifierContext) { return }
     magnifierContext.clearRect(0 , 0, magWidth, magHeight)
@@ -396,12 +400,19 @@ function addMagnifierBehavior (diffCanvas) {
     
     const img1PixelDataOnMousePosition = img1CanvasContext.getImageData(mousePos.x, mousePos.y, 1, 1, { colorSpace: 'srgb' })
     const [r1, g1, b1, a1] = img1PixelDataOnMousePosition.data
-    colorBox1.style.backgroundColor = `rgba(${r1}, ${g1}, ${b1}, ${a1/255})`
+    const a1perc = `${((a1 * 100)/255).toLocaleString('en-US', {maximumFractionDigits:1})}%`
+    const colorBox1Color = `rgb(${r1} ${g1}  ${b1}${a1perc !== "100%" ? ' / '+a1perc : ''})`
+    colorBox1.style.backgroundColor = colorBox1Color
+    colorBox1.title = colorBox1Color
   
   
     const img2PixelDataOnMousePosition = img2CanvasContext.getImageData(mousePos.x, mousePos.y, 1, 1, { colorSpace: 'srgb' })
+    
     const [r2, g2, b2, a2] = img2PixelDataOnMousePosition.data
-    colorBox2.style.backgroundColor = `rgba(${r2}, ${g2}, ${b2}, ${a2/255})`
+    const a2perc = `${((a2 * 100)/255).toLocaleString('en-US', {maximumFractionDigits:1})}%`
+    const colorBox2Color = `rgb(${r2} ${g2}  ${b2}${a2perc !== "100%" ? ' / '+a2perc : ''})`
+    colorBox2.style.backgroundColor = colorBox2Color
+    colorBox2.title = colorBox2Color
 
     const diffResult = getNormalizedDiffs({
       img1: img1PixelDataOnMousePosition.data,
@@ -429,12 +440,12 @@ function addMagnifierBehavior (diffCanvas) {
 
   diffCanvas.addEventListener('click', (event) => {
     tooltip.showPopover()
+    isTooltipFollowingPointer = true
     pointerMoveHandler(event)
     window.addEventListener('pointermove', pointerMoveHandler)
 
     magnifier.addEventListener('click', () => {
-      scale = initScale
-      tooltip.hidePopover()
+      isTooltipFollowingPointer = false
       window.removeEventListener('pointermove', pointerMoveHandler)
 
     }, { once: true })
