@@ -1,7 +1,9 @@
 import html from './image-comparison.element.html'
 import css from './image-comparison.element.css'
-import { calculateDiff, fallbackAAColor, fallbackDiffColor, getNormalizedDiffs } from '../utils/color-diff.js'
+import { calculateDiff, fallbackAAColor, fallbackDiffColor } from '../utils/color-diff.js'
 import { colorOrFallbackColorToRGBA } from '../utils/html-color-to-rgba.js'
+import { isImageComparisonElementSymbol } from '../utils/image-comparison-dom.js'
+import { addMagnifierBehavior } from '../features/has-magnifier-on-pixel-diff-tab/magnifier-feature.js'
 
 let loadTemplate = () => {
   const templateElement = document.createElement('template')
@@ -65,13 +67,11 @@ export class ImageComparisonElement extends HTMLElement {
     
     const slider = shadowRoot.querySelector('.comparison-slider')
     if (!slider) { return }
-    const diff = shadowRoot.querySelector('canvas.diff-image')
-    if (!diff) { return }
 
     addSliderDragBehavior(slider)
     intersectionObserver.observe(slider)
     resizeObserver.observe(slider)
-    addMagnifierBehavior(diff)
+    addMagnifierBehavior(this)
     shadowRoot.querySelector(leftImgSelector)?.addEventListener('load', () => this.updateCanvas())
     shadowRoot.querySelector(rightImgSelector)?.addEventListener('load', () => this.updateCanvas())
     this.addEventListener('transitionstart', transitionstartEventHandler)
@@ -101,6 +101,10 @@ export class ImageComparisonElement extends HTMLElement {
       }
       shadowRoot.querySelectorAll(rightImgSelector).forEach(img => { img.src = leftImg.src })
     }
+  }
+
+  get componentData(){
+    return componentData.getOrInsert(this, {})
   }
 
   updateCanvas () {
@@ -186,6 +190,8 @@ export class ImageComparisonElement extends HTMLElement {
   set antialias (val) {
     this.toggleAttribute('data-antialias', !!val)
   }
+
+  get [isImageComparisonElementSymbol](){ return true }
 }
 
 /**
@@ -333,138 +339,3 @@ function addSliderDragBehavior (slider) {
   })
 }
 
-/**
- * Add magnifier behavior to diff image to easily see the difference
- * @param {HTMLCanvasElement} diffCanvas - diff canvas element
- */
-function addMagnifierBehavior (diffCanvas) {
-  const tooltip = diffCanvas.parentElement?.querySelector('div.glass-magnifier-tooltip')
-  const magnifier = tooltip?.querySelector('canvas.glass-magnifier')
-  const diffCanvasContext = diffCanvas.getContext('2d')
-  const [colorBox1, colorBox2] = tooltip?.querySelectorAll('div.color-box') ?? []
-  const colorDiffInfo = tooltip?.querySelector('div.color-diff-info')
-  
-  if(!tooltip || !magnifier || !diffCanvasContext || !colorBox1 || !colorBox2 || !colorDiffInfo) { return }
-
-  const initScale = 2
-  let scale = initScale
-  magnifier.width = 450
-  magnifier.height = 150
-  const {width: magWidth, height: magHeight} = magnifier
-
-  let isTooltipFollowingPointer = true
-
-
-  /**
-   * @param {MouseEvent} event - pointer move event
-   */
-  const pointerMoveHandler = function (event) {
-    if(isTooltipFollowingPointer){
-      tooltip.style.transform = `translate(calc(${event.clientX}px - 50%), calc(${event.clientY}px - 50%))`
-    }
-    const magnifierContext = magnifier.getContext('2d')
-    if (!magnifierContext) { return }
-    magnifierContext.clearRect(0 , 0, magWidth, magHeight)
-    const mousePos = getMousePos(diffCanvas, event)
-    const rootNode = diffCanvas.getRootNode()
-    if(!(rootNode instanceof ShadowRoot)) { return }
-    const host = rootNode.host
-    if(!(host instanceof ImageComparisonElement)) { return }
-    const data = componentData.getOrInsert(host, {})
-
-
-    const width = magWidth / 3
-    const height = magHeight
-    const tooltipRect = tooltip.getBoundingClientRect()
-    var cs = getComputedStyle(tooltip);
-    const x = mousePos.x - (width * 0.5)/scale
-    const y = mousePos.y - (tooltipRect.height * 0.5 - parseFloat(cs.paddingTop) - parseFloat(cs.borderTopWidth)) / scale
-
-    const { img1Canvas, img2Canvas } = data
-    magnifierContext.imageSmoothingEnabled = false
-
-    magnifierContext.drawImage(img1Canvas, x, y, width, height, 0, 0, width*scale, height*scale)
-    magnifierContext.strokeRect(0, 0, width, height)
-    magnifierContext.clearRect(width , 0, magWidth, magHeight)
-    magnifierContext.drawImage(diffCanvas, x, y, width, height, width, 0, width*scale, height*scale)
-    magnifierContext.strokeRect(width, 0, width, height)
-    magnifierContext.clearRect(width*2 , 0, magWidth, magHeight)
-    magnifierContext.drawImage(img2Canvas, x, y, width, height, width*2, 0, width*scale, height*scale)
-    magnifierContext.strokeRect(width*2, 0, width, height)
-
-    const img1CanvasContext = img1Canvas.getContext('2d')
-    const img2CanvasContext = img2Canvas.getContext('2d')
-    if(!img1CanvasContext || !img2CanvasContext) {
-      return
-    }
-    
-    const img1PixelDataOnMousePosition = img1CanvasContext.getImageData(mousePos.x, mousePos.y, 1, 1, { colorSpace: 'srgb' })
-    const [r1, g1, b1, a1] = img1PixelDataOnMousePosition.data
-    const a1perc = `${((a1 * 100)/255).toLocaleString('en-US', {maximumFractionDigits:1})}%`
-    const colorBox1Color = `rgb(${r1} ${g1}  ${b1}${a1perc !== "100%" ? ' / '+a1perc : ''})`
-    colorBox1.style.backgroundColor = colorBox1Color
-    colorBox1.title = colorBox1Color
-  
-  
-    const img2PixelDataOnMousePosition = img2CanvasContext.getImageData(mousePos.x, mousePos.y, 1, 1, { colorSpace: 'srgb' })
-    
-    const [r2, g2, b2, a2] = img2PixelDataOnMousePosition.data
-    const a2perc = `${((a2 * 100)/255).toLocaleString('en-US', {maximumFractionDigits:1})}%`
-    const colorBox2Color = `rgb(${r2} ${g2}  ${b2}${a2perc !== "100%" ? ' / '+a2perc : ''})`
-    colorBox2.style.backgroundColor = colorBox2Color
-    colorBox2.title = colorBox2Color
-
-    const diffResult = getNormalizedDiffs({
-      img1: img1PixelDataOnMousePosition.data,
-      img2: img2PixelDataOnMousePosition.data,
-      width: 1, height: 1
-    })
-
-    const colorDistance = diffResult.diffMap[0]
-    colorDiffInfo.textContent = `color distance: ${colorDistance}%`
-
-
-
-
-    
-  }
-
-  magnifier.addEventListener('wheel', (event) => {
-    event.preventDefault()
-    const scaleup = event.deltaY < 0 ? 2 : 0.5
-    scale = Math.min(16, Math.max(initScale, scale * scaleup))
-    pointerMoveHandler(event)
-
-  })
-
-
-  diffCanvas.addEventListener('click', (event) => {
-    tooltip.showPopover()
-    isTooltipFollowingPointer = true
-    pointerMoveHandler(event)
-    window.addEventListener('pointermove', pointerMoveHandler)
-
-    magnifier.addEventListener('click', () => {
-      isTooltipFollowingPointer = false
-      window.removeEventListener('pointermove', pointerMoveHandler)
-
-    }, { once: true })
-  })
-
-
-}
-
-  /**
-   * @param {HTMLCanvasElement} canvas - canvas
-   * @param {MouseEvent} event - pointer event
-   */
-function  getMousePos(canvas, event) {
-  var rect = canvas.getBoundingClientRect(), // abs. size of element
-    scaleX = canvas.width / rect.width,    // relationship bitmap vs. element for x
-    scaleY = canvas.height / rect.height;  // relationship bitmap vs. element for y
-
-  return {
-    x: (event.clientX - rect.left) * scaleX,   // scale mouse coordinates after they have
-    y: (event.clientY - rect.top) * scaleY     // been adjusted to be relative to element
-  }
-}
