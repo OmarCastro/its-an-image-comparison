@@ -1,5 +1,5 @@
 import { getNormalizedDiffs } from '../../utils/color-diff.js'
-import { divCanvasEl, magnifierTooltipEl, magnifierColorBoxesEl, magnifierColorDiffInfoEl, magnifierCanvasEl } from '../../utils/image-comparison-dom.js'
+import { divCanvasEl, magnifierTooltipEl, magnifierColorBoxesEl, magnifierColorDiffInfoEl, magnifierCanvasEl, toggleGridViewEl } from '../../utils/image-comparison-dom.js'
 /** @import {ImageComparisonElement} from '../../web-component/image-comparison.element.js' */
 
 
@@ -13,6 +13,7 @@ export function addMagnifierBehavior (component) {
   const diffCanvas = divCanvasEl(component)
 
   const context = initContext(component)
+  const rerender = redraw.bind(null, magnifier, context)
 
   magnifier.width = context.diffCanvasWidth
   magnifier.height = context.diffCanvasHeight
@@ -33,7 +34,7 @@ export function addMagnifierBehavior (component) {
     const scale = context.scale
     context.x = context.diffCanvasMousePos.x - (context.diffCanvasWidth * 0.5) / (scale * 3)
     context.y = context.diffCanvasMousePos.y - (tooltipRect.height * 0.5 - parseFloat(cs.paddingTop) - parseFloat(cs.borderTopWidth)) / scale
-    redraw(magnifier, context)
+    rerender()
   }
 
   magnifier.addEventListener('wheel', (event) => {
@@ -41,6 +42,13 @@ export function addMagnifierBehavior (component) {
     const scaleup = event.deltaY < 0 ? 1 : -1
     context.scaleIndex = Math.min(context.scaleValues.length - 1, Math.max(0, context.scaleIndex + scaleup))
     pointerMoveHandler(event)
+  })
+
+  const toggleGridView = toggleGridViewEl(component)
+  toggleGridView.addEventListener("change", () => {
+    console.log("AAA")
+    context.showGrid = toggleGridView.checked
+    rerender()
   })
 
 
@@ -183,7 +191,7 @@ const initContext = (component) => ({
   isTooltipFollowingPointer: true,
   get data () { return component.componentData },
   componentElement: component,
-  showGrid: true,
+  showGrid: toggleGridViewEl(component).checked,
   scaleValues: [7, 15, 30],
   scaleIndex: 0,
   get scale () {

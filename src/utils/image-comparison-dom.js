@@ -7,6 +7,8 @@ export const divCanvasEl = shadowQuery('canvas.diff-image')
 export const magnifierTooltipEl = shadowQuery('div.glass-magnifier-tooltip')
 export const magnifierColorDiffInfoEl = shadowQuery('div.color-diff-info')
 export const magnifierCanvasEl = shadowQuery('canvas.glass-magnifier')
+export const toggleGridViewEl = shadowQuery('input.toggle-grid-view')
+
 
 export const magnifierColorBoxesEl = shadowQueryAll('div.color-box')
 
