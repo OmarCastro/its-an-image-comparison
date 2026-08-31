@@ -18,12 +18,14 @@
             "DOM",
             "DOM.Iterable",
             "ESNext"
-          ]
+          ],
+        "types": [
+            "typed-query-selector/strict"
+        ]
     },
     
     "files": [
-        "custom.d.ts",
-        "node_modules/typed-query-selector/strict.d.ts"
+        "custom.d.ts"
     ],
     "include": [
         "src/**/*.js",

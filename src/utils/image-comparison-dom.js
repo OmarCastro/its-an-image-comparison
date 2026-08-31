@@ -27,7 +27,7 @@ export function getHostImageComparisonElement (target) {
 /**
  * @template {string} T
  * @param {T} selector - css selector
- * @returns {(imageComparisonElement: ImageComparisonElement) => ParseSelector<T, Element>} type guarded query function
+ * @returns {(imageComparisonElement: ImageComparisonElement) => StrictlyParseSelector<T, Element>} type guarded query function
  */
 function shadowQuery (selector) {
   return (imageComparisonElement) => {
@@ -45,7 +45,7 @@ function shadowQuery (selector) {
 function elementMatcher (selector) {
 /**
  * @param {EventTarget | null} element - target element
- * @returns {element is ParseSelector<T, Element>} type guarded element matcher
+ * @returns {element is StrictlyParseSelector<T, Element>} type guarded element matcher
  */
   return function (element) {
     return element instanceof Element && element.matches(selector)
