@@ -201,6 +201,7 @@
 .glass-magnifier {
     width: 450px;
     height: 150px;
+    image-rendering: pixelated;
 }
 
 @starting-style {

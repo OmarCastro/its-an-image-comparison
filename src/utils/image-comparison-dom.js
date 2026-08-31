@@ -1,9 +1,14 @@
-/** @import {ParseSelector} from "typed-query-selector/parser.d.ts" */
+/** @import {StrictlyParseSelector} from "typed-query-selector/parser.d.ts" */
 
 /** @typedef {import('../web-component/image-comparison.element.js').ImageComparisonElement} ImageComparisonElement */
 
 export const containerEl = shadowQuery('div.container')
 export const divCanvasEl = shadowQuery('canvas.diff-image')
+export const magnifierTooltipEl = shadowQuery('div.glass-magnifier-tooltip')
+export const magnifierColorDiffInfoEl = shadowQuery('div.color-diff-info')
+export const magnifierCanvasEl = shadowQuery('canvas.glass-magnifier')
+
+export const magnifierColorBoxesEl = shadowQueryAll('div.color-box')
 
 export const isDivCanvasEl = elementMatcher('canvas.diff-image')
 
@@ -33,6 +38,19 @@ function shadowQuery (selector) {
   return (imageComparisonElement) => {
     const result = imageComparisonElement.shadowRoot?.querySelector(selector)
     if (!result) { throw Error(`Error: no ${JSON.stringify(selector)} found in image comparison element shadow DOM`) }
+    return result
+  }
+}
+
+/**
+ * @template {string} T
+ * @param {T} selector - css selector
+ * @returns {(imageComparisonElement: ImageComparisonElement) => NodeListOf<StrictlyParseSelector<T, Element>>} type guarded query function
+ */
+function shadowQueryAll (selector) {
+  return (imageComparisonElement) => {
+    const result = imageComparisonElement.shadowRoot?.querySelectorAll(selector)
+    if (result == null) { throw Error('shadow is not yet defined') }
     return result
   }
 }

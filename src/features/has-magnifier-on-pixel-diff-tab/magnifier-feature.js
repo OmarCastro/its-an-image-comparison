@@ -1,7 +1,6 @@
 import { getNormalizedDiffs } from '../../utils/color-diff.js'
-import { divCanvasEl } from '../../utils/image-comparison-dom.js'
+import { divCanvasEl, magnifierTooltipEl, magnifierColorBoxesEl, magnifierColorDiffInfoEl, magnifierCanvasEl } from '../../utils/image-comparison-dom.js'
 /** @import {ImageComparisonElement} from '../../web-component/image-comparison.element.js' */
-
 
 
 /**
@@ -9,106 +8,32 @@ import { divCanvasEl } from '../../utils/image-comparison-dom.js'
  * @param {ImageComparisonElement} component - image-comparison component
  */
 export function addMagnifierBehavior (component) {
+  const magnifier = magnifierCanvasEl(component)
+  const tooltip = magnifierTooltipEl(component)
   const diffCanvas = divCanvasEl(component)
-  const tooltip = diffCanvas.parentElement?.querySelector('div.glass-magnifier-tooltip')
-  const magnifier = tooltip?.querySelector('canvas.glass-magnifier')
-  const diffCanvasContext = diffCanvas.getContext('2d')
-  const [colorBox1, colorBox2] = tooltip?.querySelectorAll('div.color-box') ?? []
-  const colorDiffInfo = tooltip?.querySelector('div.color-diff-info')
-  
-  if(!tooltip || !magnifier || !diffCanvasContext || !colorBox1 || !colorBox2 || !colorDiffInfo) { return }
 
   const context = initContext(component)
 
   magnifier.width = context.diffCanvasWidth
   magnifier.height = context.diffCanvasHeight
-  const {width: magWidth, height: magHeight} = magnifier
-
-
-
-    /** @param {CanvasRenderingContext2D} magnifierContext - 2d canvas to draw the grid if enabled */
-  const drawImageBorders = (magnifierContext) => {
-    const width = magWidth / 3
-    const height = magHeight
-    magnifierContext.strokeRect(0, 0, width, height)
-    magnifierContext.strokeRect(width, 0, width, height)
-    magnifierContext.strokeRect(width*2, 0, width, height)
-
-  }
-
 
   /**
    * @param {MouseEvent} event - pointer move event
    */
   const pointerMoveHandler = function (event) {
-    if(context.isTooltipFollowingPointer){
+    if (context.isTooltipFollowingPointer) {
       tooltip.style.transform = `translate(calc(${event.clientX}px - 50%), calc(${event.clientY}px - 50%))`
     }
-    const magnifierContext = magnifier.getContext('2d')
-    if (!magnifierContext) { return }
-    if(isNaN(context.diffCanvasMousePos.x) || context.isTooltipFollowingPointer){
+    if (isNaN(context.diffCanvasMousePos.x) || context.isTooltipFollowingPointer) {
       context.diffCanvasMousePos = getMousePos(diffCanvas, event)
     }
 
-    
-
-    const width = magWidth / 3
-    const height = magHeight
     const tooltipRect = tooltip.getBoundingClientRect()
-    var cs = getComputedStyle(tooltip);
+    var cs = getComputedStyle(tooltip)
     const scale = context.scale
-    context.x = context.diffCanvasMousePos.x - (width * 0.5)/scale
+    context.x = context.diffCanvasMousePos.x - (context.diffCanvasWidth * 0.5) / (scale * 3)
     context.y = context.diffCanvasMousePos.y - (tooltipRect.height * 0.5 - parseFloat(cs.paddingTop) - parseFloat(cs.borderTopWidth)) / scale
-
-    const {data, x, y} = context
-    if(!data) { return }
-
-    const { img1Canvas, img2Canvas } = data
-    magnifierContext.imageSmoothingEnabled = false
-    magnifierContext.clearRect(0 , 0, magWidth, magHeight)
-
-
-    magnifierContext.drawImage(img1Canvas, x, y, width, height, 0, 0, width*scale, height*scale)
-    magnifierContext.clearRect(width , 0, magWidth, magHeight)
-    magnifierContext.drawImage(diffCanvas, x, y, width, height, width, 0, width*scale, height*scale)
-    magnifierContext.clearRect(width*2 , 0, magWidth, magHeight)
-    magnifierContext.drawImage(img2Canvas, x, y, width, height, width*2, 0, width*scale, height*scale)
-
-    drawGrid(magnifierContext, context)
-    drawImageBorders(magnifierContext)
-
-
-    const img1CanvasContext = img1Canvas.getContext('2d')
-    const img2CanvasContext = img2Canvas.getContext('2d')
-    if(!img1CanvasContext || !img2CanvasContext) {
-      return
-    }
-    
- 
-    const img1PixelDataOnMousePosition = img1CanvasContext.getImageData(context.diffCanvasMousePos.x, context.diffCanvasMousePos.y, 1, 1, { colorSpace: 'srgb' })
-    const [r1, g1, b1, a1] = img1PixelDataOnMousePosition.data
-    const a1perc = `${((a1 * 100)/255).toLocaleString('en-US', {maximumFractionDigits:1})}%`
-    const colorBox1Color = `rgb(${r1} ${g1}  ${b1}${a1perc !== "100%" ? ' / '+a1perc : ''})`
-    colorBox1.style.backgroundColor = colorBox1Color
-    colorBox1.title = colorBox1Color
-  
-  
-    const img2PixelDataOnMousePosition = img2CanvasContext.getImageData(context.diffCanvasMousePos.x, context.diffCanvasMousePos.y, 1, 1, { colorSpace: 'srgb' })
-    
-    const [r2, g2, b2, a2] = img2PixelDataOnMousePosition.data
-    const a2perc = `${((a2 * 100)/255).toLocaleString('en-US', {maximumFractionDigits:1})}%`
-    const colorBox2Color = `rgb(${r2} ${g2}  ${b2}${a2perc !== "100%" ? ' / '+a2perc : ''})`
-    colorBox2.style.backgroundColor = colorBox2Color
-    colorBox2.title = colorBox2Color
-
-    const diffResult = getNormalizedDiffs({
-      img1: img1PixelDataOnMousePosition.data,
-      img2: img2PixelDataOnMousePosition.data,
-      width: 1, height: 1
-    })
-
-    const colorDistance = diffResult.diffMap[0]
-    colorDiffInfo.textContent = `color distance: ${colorDistance}%`
+    redraw(magnifier, context)
   }
 
   magnifier.addEventListener('wheel', (event) => {
@@ -133,72 +58,171 @@ export function addMagnifierBehavior (component) {
   })
 }
 
-  /**
-   * @param {HTMLCanvasElement} canvas - canvas
-   * @param {MouseEvent} event - pointer event
-   */
-function  getMousePos(canvas, event) {
+/**
+ * @param {HTMLCanvasElement} canvas - canvas
+ * @param {MouseEvent} event - pointer event
+ */
+function  getMousePos (canvas, event) {
   var rect = canvas.getBoundingClientRect(), // abs. size of element
     scaleX = canvas.width / rect.width,    // relationship bitmap vs. element for x
-    scaleY = canvas.height / rect.height;  // relationship bitmap vs. element for y
+    scaleY = canvas.height / rect.height  // relationship bitmap vs. element for y
 
   return {
     x: (event.clientX - rect.left) * scaleX,   // scale mouse coordinates after they have
-    y: (event.clientY - rect.top) * scaleY     // been adjusted to be relative to element
+    y: (event.clientY - rect.top) * scaleY,     // been adjusted to be relative to element
   }
 }
 
-/** @param {ImageComparisonElement} component */
+/**
+ * @param {HTMLCanvasElement} magnifier - 2d canvas to draw the grid
+ * @param {ReturnType<typeof initContext>} context - function context
+ */
+function redraw (magnifier, context) {
+  const magnifierContext = magnifier.getContext('2d')
+  if (!magnifierContext) { return }
+  drawImages(magnifierContext, context)
+  drawGrid(magnifierContext, context)
+  drawImageBorders(magnifierContext, context)
+  updatePixelColorDiffInfo(context)
+}
+
+/**
+ * @param {CanvasRenderingContext2D} magnifierContext - 2d canvas to draw the grid
+ * @param {ReturnType<typeof initContext>} context - function context
+ */
+const drawImageBorders = (magnifierContext, context) => {
+  const { diffCanvasWidth, diffCanvasHeight } = context
+
+  const width = diffCanvasWidth / 3
+  const height = diffCanvasHeight
+  magnifierContext.strokeRect(0, 0, width, height)
+  magnifierContext.strokeRect(width, 0, width, height)
+  magnifierContext.strokeRect(width * 2, 0, width, height)
+
+}
+
+/**
+ * @param {CanvasRenderingContext2D} magnifierContext - 2d canvas to draw the grid
+ * @param {ReturnType<typeof initContext>} context - function context
+ */
+function drawImages (magnifierContext, context) {
+  const { data, x, y, diffCanvasWidth, diffCanvasHeight, componentElement, scale } = context
+  const diffCanvas = divCanvasEl(componentElement)
+
+  if (!data) { return }
+  const height = diffCanvasHeight
+  const width = diffCanvasWidth / 3
+
+  const { img1Canvas, img2Canvas } = data
+  magnifierContext.imageSmoothingEnabled = false
+  magnifierContext.clearRect(0, 0, diffCanvasWidth, height)
+
+  magnifierContext.drawImage(img1Canvas, x, y, width, height, 0, 0, width * scale, height * scale)
+  magnifierContext.clearRect(width, 0, diffCanvasWidth, height)
+  magnifierContext.drawImage(diffCanvas, x, y, width, height, width, 0, width * scale, height * scale)
+  magnifierContext.clearRect(width * 2, 0, diffCanvasWidth, height)
+  magnifierContext.drawImage(img2Canvas, x, y, width, height, width * 2, 0, width * scale, height * scale)
+}
+
+/**
+ *
+ * @param {ReturnType<typeof initContext>} context - function context
+ */
+function updatePixelColorDiffInfo (context) {
+  const { data, componentElement } = context
+  if (!data) { return }
+
+  const [colorBox1, colorBox2] = magnifierColorBoxesEl(componentElement)
+  const colorDiffInfo = magnifierColorDiffInfoEl(componentElement)
+  if (!colorBox1 || !colorBox2) { return }
+
+  const { img1Canvas, img2Canvas } = data
+
+  const img1CanvasContext = img1Canvas.getContext('2d')
+  const img2CanvasContext = img2Canvas.getContext('2d')
+  if (!img1CanvasContext || !img2CanvasContext) {
+    return
+  }
+
+  const img1PixelDataOnMousePosition = img1CanvasContext.getImageData(context.diffCanvasMousePos.x, context.diffCanvasMousePos.y, 1, 1, { colorSpace: 'srgb' })
+  const [r1, g1, b1, a1] = img1PixelDataOnMousePosition.data
+  const a1perc = `${((a1 * 100) / 255).toLocaleString('en-US', { maximumFractionDigits: 1 })}%`
+  const colorBox1Color = `rgb(${r1} ${g1}  ${b1}${a1perc !== '100%' ? ' / ' + a1perc : ''})`
+  colorBox1.style.backgroundColor = colorBox1Color
+  colorBox1.title = colorBox1Color
+
+
+  const img2PixelDataOnMousePosition = img2CanvasContext.getImageData(context.diffCanvasMousePos.x, context.diffCanvasMousePos.y, 1, 1, { colorSpace: 'srgb' })
+
+  const [r2, g2, b2, a2] = img2PixelDataOnMousePosition.data
+  const a2perc = `${((a2 * 100) / 255).toLocaleString('en-US', { maximumFractionDigits: 1 })}%`
+  const colorBox2Color = `rgb(${r2} ${g2}  ${b2}${a2perc !== '100%' ? ' / ' + a2perc : ''})`
+  colorBox2.style.backgroundColor = colorBox2Color
+  colorBox2.title = colorBox2Color
+
+  const diffResult = getNormalizedDiffs({
+    img1: img1PixelDataOnMousePosition.data,
+    img2: img2PixelDataOnMousePosition.data,
+    width: 1, height: 1,
+  })
+
+  const colorDistance = diffResult.diffMap[0]
+  colorDiffInfo.textContent = `color distance: ${colorDistance}%`
+}
+
+/**
+ * @param {ImageComparisonElement} component - target component
+ */
 const initContext = (component) => ({
-    x: 0,
-    y: 0,
-    diffCanvasWidth: 450,
-    diffCanvasHeight: 150,
-    diffCanvasMousePos: {x: NaN, y: NaN},
-    isTooltipFollowingPointer: true,
-    get data(){return component.componentData},
-    showGrid: true,
-    scaleValues: [7, 15, 30],
-    scaleIndex: 0,
-    get scale(){
-      return this.scaleValues[this.scaleIndex]
-    }
-
-
+  x: 0,
+  y: 0,
+  diffCanvasWidth: 450,
+  diffCanvasHeight: 150,
+  diffCanvasMousePos: { x: NaN, y: NaN },
+  isTooltipFollowingPointer: true,
+  get data () { return component.componentData },
+  componentElement: component,
+  showGrid: true,
+  scaleValues: [7, 15, 30],
+  scaleIndex: 0,
+  get scale () {
+    return this.scaleValues[this.scaleIndex]
+  },
 })
 
-  /** 
-   * @param {CanvasRenderingContext2D} magnifierContext - 2d canvas to draw the grid if enabled
-   * @param {ReturnType<typeof initContext>} context - 2d canvas to draw the grid if enabled
-   */
-  const drawGrid = (magnifierContext, context) => {
-    if(!context.showGrid){ return }
+/**
+ * Draws the grid view if enabled
+ * @param {CanvasRenderingContext2D} magnifierContext - 2d canvas to draw the grid
+ * @param {ReturnType<typeof initContext>} context - function context
+ */
+function drawGrid (magnifierContext, context) {
+  if (!context.showGrid) { return }
 
-    const width = context.diffCanvasWidth / 3
-    const height = context.diffCanvasHeight
-    const {x, y, scale} = context
+  const width = context.diffCanvasWidth / 3
+  const height = context.diffCanvasHeight
+  const { x, y, scale } = context
 
 
-    magnifierContext.save()
-    magnifierContext.beginPath()
-    const marginXScale = -Math.floor((x%1)*scale)
-    for(let i=marginXScale%scale + scale; i<width; i+=scale){
-      magnifierContext.moveTo(i, 0)
-      magnifierContext.lineTo(i, height)
-      magnifierContext.moveTo(i+width, 0)
-      magnifierContext.lineTo(i+width, height)
-      magnifierContext.moveTo(i+width*2, 0)
-      magnifierContext.lineTo(i+width*2, height)
-    }
-
-    const marginYScale = -1-Math.floor((y%1)*scale)
-    const magWidth = context.diffCanvasWidth
-    for(let i=marginYScale; i<height; i += scale){
-      magnifierContext.moveTo(0, i)
-      magnifierContext.lineTo(magWidth, i)
-    }
-
-    magnifierContext.strokeStyle = "#888"
-    magnifierContext.stroke()
-    magnifierContext.restore()
+  magnifierContext.save()
+  magnifierContext.beginPath()
+  const marginXScale = 0.5 - Math.round((x % 1) * scale)
+  for (let i = marginXScale % scale + scale; i < width; i += scale) {
+    magnifierContext.moveTo(i, 0)
+    magnifierContext.lineTo(i, height)
+    magnifierContext.moveTo(i + width, 0)
+    magnifierContext.lineTo(i + width, height)
+    magnifierContext.moveTo(i + width * 2, 0)
+    magnifierContext.lineTo(i + width * 2, height)
   }
+
+  const marginYScale = 0.5 - Math.round((y % 1) * scale)
+  const magWidth = context.diffCanvasWidth
+  for (let i = marginYScale; i < height; i += scale) {
+    magnifierContext.moveTo(0, i)
+    magnifierContext.lineTo(magWidth, i)
+  }
+
+  magnifierContext.strokeStyle = '#888'
+  magnifierContext.stroke()
+  magnifierContext.restore()
+}
