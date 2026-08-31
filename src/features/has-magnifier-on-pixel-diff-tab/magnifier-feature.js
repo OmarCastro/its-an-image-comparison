@@ -82,6 +82,7 @@ function redraw (magnifier, context) {
   if (!magnifierContext) { return }
   drawImages(magnifierContext, context)
   drawGrid(magnifierContext, context)
+  drawSelectedCellInGrid(magnifierContext, context)
   drawImageBorders(magnifierContext, context)
   updatePixelColorDiffInfo(context)
 }
@@ -224,5 +225,41 @@ function drawGrid (magnifierContext, context) {
 
   magnifierContext.strokeStyle = '#888'
   magnifierContext.stroke()
+  magnifierContext.restore()
+}
+
+
+/**
+ * Draws the grid view if enabled
+ * @param {CanvasRenderingContext2D} magnifierContext - 2d canvas to draw the grid
+ * @param {ReturnType<typeof initContext>} context - function context
+ */
+function drawSelectedCellInGrid (magnifierContext, context) {
+  if (!context.showGrid) { return }
+
+  const width = context.diffCanvasWidth / 3
+  const { x, y, scale, diffCanvasMousePos } = context
+
+  const diffX = (diffCanvasMousePos.x - x) * scale
+  const diffY = (diffCanvasMousePos.y - y) * scale
+
+  const marginXScaleFromGrid = 0.5 - Math.round((x % 1) * scale)
+  const marginYScaleFromGrid = 0.5 - Math.round((y % 1) * scale)
+
+  const marginXScale = marginXScaleFromGrid % scale + scale
+  const marginYScale = marginYScaleFromGrid % scale + scale
+
+  const diffXInGrid = Math.floor((diffX - marginXScale) / scale) * scale + marginXScale
+  const diffYInGrid = Math.floor((diffY - marginYScale) / scale) * scale + marginYScale
+
+  magnifierContext.save()
+  magnifierContext.beginPath()
+  magnifierContext.strokeStyle = '#fff'
+
+  // for (let i = marginXScale % scale + scale; i < width; i += scale) {
+  for (let i = 0; i < 3; i += 1) {
+    magnifierContext.strokeRect(diffXInGrid + width*i, diffYInGrid, scale, scale)
+  }
+
   magnifierContext.restore()
 }
