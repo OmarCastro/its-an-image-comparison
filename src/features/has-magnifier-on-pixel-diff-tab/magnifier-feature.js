@@ -192,7 +192,7 @@ const initContext = (component) => ({
   get data () { return component.componentData },
   componentElement: component,
   showGrid: toggleGridViewEl(component).checked,
-  scaleValues: [1, 5, 7, 15, 30],
+  scaleValues: [1, 4, 8, 16, 32],
   scaleIndex: 2,
   get scale () {
     return this.scaleValues[this.scaleIndex]
