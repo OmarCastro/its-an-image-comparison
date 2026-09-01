@@ -88,6 +88,9 @@ function  getMousePos (canvas, event) {
 function redraw (magnifier, context) {
   const magnifierContext = magnifier.getContext('2d')
   if (!magnifierContext) { return }
+  magnifierContext.imageSmoothingEnabled = false
+  const { diffCanvasWidth, diffCanvasHeight } = context
+  magnifierContext.clearRect(0, 0, diffCanvasWidth, diffCanvasHeight)
   drawImages(magnifierContext, context)
   drawGrid(magnifierContext, context)
   drawSelectedCellInGrid(magnifierContext, context)
@@ -123,8 +126,6 @@ function drawImages (magnifierContext, context) {
   const width = diffCanvasWidth / 3
 
   const { img1Canvas, img2Canvas } = data
-  magnifierContext.imageSmoothingEnabled = false
-  magnifierContext.clearRect(0, 0, diffCanvasWidth, height)
 
   magnifierContext.drawImage(img1Canvas, x, y, width, height, 0, 0, width * scale, height * scale)
   magnifierContext.clearRect(width, 0, diffCanvasWidth, height)
