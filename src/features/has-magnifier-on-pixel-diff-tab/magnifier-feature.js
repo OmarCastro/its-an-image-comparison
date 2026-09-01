@@ -221,7 +221,6 @@ function drawCheckerBg (magnifierContext, context, initX = 0) {
   const marginXScale = 0.5 - Math.round((x - Math.floor(x)) * scale)
   const marginYScale = 0.5 - Math.round((y - Math.floor(y)) * scale)
 
-  
   const initI = marginXScale > 0 ? marginXScale % squareWidth - squareWidth : marginXScale
   const initJ = marginYScale > 0 ? marginYScale % squareWidth - squareWidth : marginYScale
   console.log({initI, initJ, x, y, marginXScale, marginYScale, yy: y % 1, yyy: (Math.round(y % 1) * scale)})
@@ -264,7 +263,7 @@ function drawGrid (magnifierContext, context) {
 
   magnifierContext.save()
   magnifierContext.beginPath()
-  const marginXScale = 0.5 - Math.round((x % 1) * scale)
+  const marginXScale = 0.5 - Math.round((x - Math.floor(x)) * scale)
   for (let i = marginXScale % scale + scale; i < width; i += scale) {
     magnifierContext.moveTo(i, 0)
     magnifierContext.lineTo(i, height)
@@ -274,7 +273,7 @@ function drawGrid (magnifierContext, context) {
     magnifierContext.lineTo(i + width * 2, height)
   }
 
-  const marginYScale = 0.5 - Math.round((y % 1) * scale)
+  const marginYScale = 0.5 - Math.round((y - Math.floor(y)) * scale)
   const magWidth = context.diffCanvasWidth
   for (let i = marginYScale; i < height; i += scale) {
     magnifierContext.moveTo(0, i)
@@ -301,8 +300,8 @@ function drawSelectedCellInGrid (magnifierContext, context) {
   const diffX = (diffCanvasMousePos.x - x) * scale
   const diffY = (diffCanvasMousePos.y - y) * scale
 
-  const marginXScaleFromGrid = 0.5 - Math.round((x % 1) * scale)
-  const marginYScaleFromGrid = 0.5 - Math.round((y % 1) * scale)
+  const marginXScaleFromGrid = 0.5 - Math.round((x - Math.floor(x)) * scale)
+  const marginYScaleFromGrid = 0.5 - Math.round((y - Math.floor(y)) * scale)
 
   const marginXScale = marginXScaleFromGrid % scale + scale
   const marginYScale = marginYScaleFromGrid % scale + scale
