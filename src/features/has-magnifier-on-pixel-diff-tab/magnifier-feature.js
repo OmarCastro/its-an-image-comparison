@@ -46,7 +46,6 @@ export function addMagnifierBehavior (component) {
 
   const toggleGridView = toggleGridViewEl(component)
   toggleGridView.addEventListener("change", () => {
-    console.log("AAA")
     context.showGrid = toggleGridView.checked
     rerender()
   })
@@ -193,8 +192,8 @@ const initContext = (component) => ({
   get data () { return component.componentData },
   componentElement: component,
   showGrid: toggleGridViewEl(component).checked,
-  scaleValues: [7, 15, 30],
-  scaleIndex: 0,
+  scaleValues: [1, 5, 7, 15, 30],
+  scaleIndex: 2,
   get scale () {
     return this.scaleValues[this.scaleIndex]
   },
@@ -256,7 +255,7 @@ function drawCheckerBg (magnifierContext, context, initX = 0) {
  * @param {ReturnType<typeof initContext>} context - function context
  */
 function drawGrid (magnifierContext, context) {
-  if (!context.showGrid) { return }
+  if (!context.showGrid || context.scale == 1) { return }
 
   const width = context.diffCanvasWidth / 3
   const height = context.diffCanvasHeight
@@ -294,7 +293,7 @@ function drawGrid (magnifierContext, context) {
  * @param {ReturnType<typeof initContext>} context - function context
  */
 function drawSelectedCellInGrid (magnifierContext, context) {
-  if (!context.showGrid) { return }
+  if (!context.showGrid || context.scale == 1) { return }
 
   const width = context.diffCanvasWidth / 3
   const { x, y, scale, diffCanvasMousePos } = context
