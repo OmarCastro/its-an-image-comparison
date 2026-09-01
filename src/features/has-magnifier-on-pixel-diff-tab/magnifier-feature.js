@@ -127,11 +127,11 @@ function drawImages (magnifierContext, context) {
 
   const { img1Canvas, img2Canvas } = data
 
-  magnifierContext.drawImage(img1Canvas, x, y, width, height, 0, 0, width * scale, height * scale)
-  magnifierContext.clearRect(width, 0, diffCanvasWidth, height)
-  magnifierContext.drawImage(diffCanvas, x, y, width, height, width, 0, width * scale, height * scale)
-  magnifierContext.clearRect(width * 2, 0, diffCanvasWidth, height)
-  magnifierContext.drawImage(img2Canvas, x, y, width, height, width * 2, 0, width * scale, height * scale)
+  drawCheckerBg(magnifierContext, context)
+  magnifierContext.drawImage(img1Canvas, x, y, width/scale, height/scale, 0, 0, width, height)
+  magnifierContext.drawImage(diffCanvas, x, y, width/scale, height/scale, width, 0, width, height)
+  drawCheckerBg(magnifierContext, context, width*2)
+  magnifierContext.drawImage(img2Canvas, x, y, width/scale, height/scale, width * 2, 0, width, height)
 }
 
 /**
@@ -199,6 +199,56 @@ const initContext = (component) => ({
     return this.scaleValues[this.scaleIndex]
   },
 })
+
+/**
+ * Draws the grid view if enabled
+ * @param {CanvasRenderingContext2D} magnifierContext - 2d canvas to draw the grid
+ * @param {ReturnType<typeof initContext>} context - function context
+ * @param {number} [initX] - init X value
+ */
+function drawCheckerBg (magnifierContext, context, initX = 0) {
+
+  const width = context.diffCanvasWidth / 3
+  const height = context.diffCanvasHeight
+  const { x, y, scale } = context
+
+
+  magnifierContext.save()
+  magnifierContext.beginPath()
+
+  const squareWidthInPixels = scale <= 1 ? 15 : 5
+  const squareWidth = squareWidthInPixels * scale
+
+  const marginXScale = 0.5 - Math.round((x - Math.floor(x)) * scale)
+  const marginYScale = 0.5 - Math.round((y - Math.floor(y)) * scale)
+
+  
+  const initI = marginXScale > 0 ? marginXScale % squareWidth - squareWidth : marginXScale
+  const initJ = marginYScale > 0 ? marginYScale % squareWidth - squareWidth : marginYScale
+  console.log({initI, initJ, x, y, marginXScale, marginYScale, yy: y % 1, yyy: (Math.round(y % 1) * scale)})
+  for (let i = initI; i < width; i += squareWidth) {
+    
+    let x = i + initX
+    let rectWidth = squareWidth
+    if(x < initX){
+      x = initX
+      rectWidth -= initX - x
+    }
+    if((x + squareWidth) > (width + initX)){
+      rectWidth -= (x + squareWidth) - (width + initX)
+    }
+
+    for (let j = initJ; j < height; j += squareWidth) { 
+      const val = (Math.floor(i/squareWidth) + Math.floor(j/squareWidth)) & 1
+      
+      magnifierContext.fillStyle = val ? '#555': '#aaa'
+      magnifierContext.fillRect(x, j, rectWidth, squareWidth)
+    }
+  }
+
+  magnifierContext.restore()
+}
+
 
 /**
  * Draws the grid view if enabled
