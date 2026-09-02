@@ -20,18 +20,16 @@ export function addMagnifierBehavior (component) {
    */
   const pointerMoveHandler = function (event) {
     if (context.isTooltipFollowingPointer) {
-      tooltip.style.transform = `translate(calc(${event.clientX}px - 50%), calc(${event.clientY}px - 50%))`
+      tooltip.style.transform = `translate(calc(${event.clientX}px - 50%), calc(${event.clientY}px - 75px))`
     }
     if (isNaN(context.diffCanvasMousePos.x) || context.isTooltipFollowingPointer) {
       context.diffCanvasMousePos = getMousePos(diffCanvas, event)
     }
+    const {diffCanvasWidth, diffCanvasHeight, diffCanvasMousePos, dpr} = context
+    const scale = context.scale* dpr
 
-    const tooltipRect = tooltip.getBoundingClientRect()
-    var cs = getComputedStyle(tooltip)
-    const scale = context.scale
-    const {diffCanvasWidth, diffCanvasMousePos} = context
-    context.x = diffCanvasMousePos.x - (diffCanvasWidth * 0.5) / (scale * 3)
-    context.y = diffCanvasMousePos.y - (tooltipRect.height * 0.5 - parseFloat(cs.paddingTop) - parseFloat(cs.borderTopWidth)) / scale
+    context.x = diffCanvasMousePos.x - (diffCanvasWidth * 0.5) / (scale * 3) 
+    context.y = diffCanvasMousePos.y - (diffCanvasHeight * 0.5) / scale
     const isOutOfBounds = context.x > diffCanvas.width || context.y > diffCanvas.height
     if(context.isRenderingOutOfBounds){
       if(isOutOfBounds){ return }
@@ -94,11 +92,13 @@ function  getMousePos (canvas, event) {
 function redraw (magnifier, context) {
   const magnifierContext = magnifier.getContext('2d')
   if (!magnifierContext) { return }
+  const dpr = window.devicePixelRatio || 1;
 
-  if(isNaN(context.diffCanvasWidth)){
+  if(isNaN(context.diffCanvasWidth) || context.dpr !== dpr){
     const rect = magnifier.getBoundingClientRect()
-    context.diffCanvasWidth = rect.width
-    context.diffCanvasHeight = rect.height
+    context.dpr = dpr
+    context.diffCanvasWidth = rect.width * dpr
+    context.diffCanvasHeight = rect.height * dpr
     magnifier.width = context.diffCanvasWidth
     magnifier.height = context.diffCanvasHeight
   }
@@ -133,8 +133,9 @@ const drawImageBorders = (magnifierContext, context) => {
  * @param {ReturnType<typeof initContext>} context - function context
  */
 function drawImages (magnifierContext, context) {
-  const { data, x, y, diffCanvasWidth, diffCanvasHeight, componentElement, scale } = context
+  const { data, x, y, diffCanvasWidth, diffCanvasHeight, componentElement, dpr } = context
   const diffCanvas = divCanvasEl(componentElement)
+  const  scale = context.scale * dpr
 
   if (!data) { return }
   const height = diffCanvasHeight
@@ -144,6 +145,7 @@ function drawImages (magnifierContext, context) {
 
   drawCheckerBg(magnifierContext, context)
   magnifierContext.drawImage(img1Canvas, x, y, width/scale, height/scale, 0, 0, width, height)
+  drawCheckerBg(magnifierContext, context, width)
   magnifierContext.drawImage(diffCanvas, x, y, width/scale, height/scale, width, 0, width, height)
   drawCheckerBg(magnifierContext, context, width*2)
   magnifierContext.drawImage(img2Canvas, x, y, width/scale, height/scale, width * 2, 0, width, height)
@@ -201,6 +203,7 @@ function updatePixelColorDiffInfo (context) {
 const initContext = (component) => ({
   x: 0,
   y: 0,
+  dpr: window.devicePixelRatio || 1,
   diffCanvasWidth: NaN,
   diffCanvasHeight: NaN,
   diffCanvasMousePos: { x: NaN, y: NaN },
@@ -226,7 +229,10 @@ function drawCheckerBg (magnifierContext, context, initX = 0) {
 
   const width = context.diffCanvasWidth / 3
   const height = context.diffCanvasHeight
-  const { x, y, scale } = context
+  const { dpr } = context
+  const scale = context.scale * dpr
+  const x = context.x * dpr
+  const y = context.y * dpr
 
 
   magnifierContext.save()
@@ -235,12 +241,11 @@ function drawCheckerBg (magnifierContext, context, initX = 0) {
   const squareWidthInPixels = scale <= 1 ? 15 : 5
   const squareWidth = squareWidthInPixels * scale
 
-  const marginXScale = 0.5 - Math.round((x - Math.floor(x)) * scale)
-  const marginYScale = 0.5 - Math.round((y - Math.floor(y)) * scale)
+  const marginXScale = 0.5 - (scale > 1 ? ((x - Math.floor(x)) * scale): 0)
+  const marginYScale = 0.5 - (scale > 1 ? ((y - Math.floor(y)) * scale): 0)
 
-  const initI = marginXScale > 0 ? marginXScale % squareWidth - squareWidth : marginXScale
-  const initJ = marginYScale > 0 ? marginYScale % squareWidth - squareWidth : marginYScale
-  console.log({initI, initJ, x, y, marginXScale, marginYScale, yy: y % 1, yyy: (Math.round(y % 1) * scale)})
+  const initI = marginXScale > 0 ? marginXScale % scale - scale : marginXScale
+  const initJ = marginYScale > 0 ? marginYScale % scale - scale : marginYScale
   for (let i = initI; i < width; i += squareWidth) {
     
     let x = i + initX
@@ -271,16 +276,19 @@ function drawCheckerBg (magnifierContext, context, initX = 0) {
  * @param {ReturnType<typeof initContext>} context - function context
  */
 function drawGrid (magnifierContext, context) {
-  if (!context.showGrid || context.scale == 1) { return }
+  if (!context.showGrid || context.scale <= 1) { return }
 
   const width = context.diffCanvasWidth / 3
   const height = context.diffCanvasHeight
-  const { x, y, scale } = context
-
+  const scale = context.scale * context.dpr
+  const x = context.x * context.dpr
+  const y = context.y * context.dpr
 
   magnifierContext.save()
   magnifierContext.beginPath()
-  const marginXScale = 0.5 - Math.round((x - Math.floor(x)) * scale)
+  const marginXScale = 0.5 - ((x - Math.floor(x)) * scale)
+  const marginYScale = 0.5 - ((y - Math.floor(y)) * scale)
+
   for (let i = marginXScale % scale + scale; i < width; i += scale) {
     magnifierContext.moveTo(i, 0)
     magnifierContext.lineTo(i, height)
@@ -290,7 +298,6 @@ function drawGrid (magnifierContext, context) {
     magnifierContext.lineTo(i + width * 2, height)
   }
 
-  const marginYScale = 0.5 - Math.round((y - Math.floor(y)) * scale)
   const magWidth = context.diffCanvasWidth
   for (let i = marginYScale; i < height; i += scale) {
     magnifierContext.moveTo(0, i)
@@ -309,16 +316,19 @@ function drawGrid (magnifierContext, context) {
  * @param {ReturnType<typeof initContext>} context - function context
  */
 function drawSelectedCellInGrid (magnifierContext, context) {
-  if (!context.showGrid || context.scale == 1) { return }
+  if (!context.showGrid || context.scale <= 1) { return }
 
   const width = context.diffCanvasWidth / 3
-  const { x, y, scale, diffCanvasMousePos } = context
+  const { diffCanvasMousePos, dpr } = context
+  const scale = context.scale * dpr
+  const x = context.x * dpr
+  const y = context.y * dpr
 
-  const diffX = (diffCanvasMousePos.x - x) * scale
-  const diffY = (diffCanvasMousePos.y - y) * scale
+  const diffX = (diffCanvasMousePos.x - context.x) * scale
+  const diffY = (diffCanvasMousePos.y - context.y) * scale
 
-  const marginXScaleFromGrid = 0.5 - Math.round((x - Math.floor(x)) * scale)
-  const marginYScaleFromGrid = 0.5 - Math.round((y - Math.floor(y)) * scale)
+  const marginXScaleFromGrid = 0.5 - ((x - Math.floor(x)) * scale)
+  const marginYScaleFromGrid = 0.5 - ((y - Math.floor(y)) * scale)
 
   const marginXScale = marginXScaleFromGrid % scale + scale
   const marginYScale = marginYScaleFromGrid % scale + scale
