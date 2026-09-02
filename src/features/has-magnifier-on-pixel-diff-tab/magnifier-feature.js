@@ -15,9 +15,6 @@ export function addMagnifierBehavior (component) {
   const context = initContext(component)
   const rerender = redraw.bind(null, magnifier, context)
 
-  magnifier.width = context.diffCanvasWidth
-  magnifier.height = context.diffCanvasHeight
-
   /**
    * @param {MouseEvent} event - pointer move event
    */
@@ -32,15 +29,25 @@ export function addMagnifierBehavior (component) {
     const tooltipRect = tooltip.getBoundingClientRect()
     var cs = getComputedStyle(tooltip)
     const scale = context.scale
-    context.x = context.diffCanvasMousePos.x - (context.diffCanvasWidth * 0.5) / (scale * 3)
-    context.y = context.diffCanvasMousePos.y - (tooltipRect.height * 0.5 - parseFloat(cs.paddingTop) - parseFloat(cs.borderTopWidth)) / scale
+    const {diffCanvasWidth, diffCanvasMousePos} = context
+    context.x = diffCanvasMousePos.x - (diffCanvasWidth * 0.5) / (scale * 3)
+    context.y = diffCanvasMousePos.y - (tooltipRect.height * 0.5 - parseFloat(cs.paddingTop) - parseFloat(cs.borderTopWidth)) / scale
+    const isOutOfBounds = context.x > diffCanvas.width || context.y > diffCanvas.height
+    if(context.isRenderingOutOfBounds){
+      if(isOutOfBounds){ return }
+      context.isRenderingOutOfBounds = false
+    } else if(isOutOfBounds){
+      context.isRenderingOutOfBounds = true
+    }
     rerender()
   }
 
   magnifier.addEventListener('wheel', (event) => {
     event.preventDefault()
     const scaleup = event.deltaY < 0 ? 1 : -1
+    const oldScaleIndex = context.scaleIndex
     context.scaleIndex = Math.min(context.scaleValues.length - 1, Math.max(0, context.scaleIndex + scaleup))
+    if(oldScaleIndex == context.scaleIndex){ return }
     pointerMoveHandler(event)
   })
 
@@ -87,6 +94,15 @@ function  getMousePos (canvas, event) {
 function redraw (magnifier, context) {
   const magnifierContext = magnifier.getContext('2d')
   if (!magnifierContext) { return }
+
+  if(isNaN(context.diffCanvasWidth)){
+    const rect = magnifier.getBoundingClientRect()
+    context.diffCanvasWidth = rect.width
+    context.diffCanvasHeight = rect.height
+    magnifier.width = context.diffCanvasWidth
+    magnifier.height = context.diffCanvasHeight
+  }
+
   magnifierContext.imageSmoothingEnabled = false
   const { diffCanvasWidth, diffCanvasHeight } = context
   magnifierContext.clearRect(0, 0, diffCanvasWidth, diffCanvasHeight)
@@ -185,10 +201,11 @@ function updatePixelColorDiffInfo (context) {
 const initContext = (component) => ({
   x: 0,
   y: 0,
-  diffCanvasWidth: 450,
-  diffCanvasHeight: 150,
+  diffCanvasWidth: NaN,
+  diffCanvasHeight: NaN,
   diffCanvasMousePos: { x: NaN, y: NaN },
   isTooltipFollowingPointer: true,
+  isRenderingOutOfBounds: false,
   get data () { return component.componentData },
   componentElement: component,
   showGrid: toggleGridViewEl(component).checked,
