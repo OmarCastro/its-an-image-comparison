@@ -22,16 +22,18 @@ export function addMagnifierBehavior (component) {
    */
   const pointerMoveHandler = function (event, {forceRerender = false} = {}) {
     if (context.isTooltipFollowingPointer) {
-      tooltip.style.transform = `translate(calc(${event.clientX}px - 50%), calc(${event.clientY}px - 75px))`
+      updateMagnifierDimensions(magnifier, context)
+      tooltip.style.transform = `translate(calc(${event.clientX}px - 50%), ${event.clientY-context.magnifierCanvasDimensions.height*0.5}px)`
     }
     if (isNaN(context.diffCanvasMousePos.x) || context.isTooltipFollowingPointer) {
       context.diffCanvasMousePos = getMousePos(diffCanvas, event)
     }
-    const {diffCanvasWidth, diffCanvasHeight, diffCanvasMousePos, dpr} = context
+    const {diffCanvasMousePos, dpr} = context
+    const {width, height} = context.magnifierCanvasResolution
     const scale = context.scale* dpr
 
-    context.x = diffCanvasMousePos.x - (diffCanvasWidth * 0.5) / (scale * 3) 
-    context.y = diffCanvasMousePos.y - (diffCanvasHeight * 0.5) / scale
+    context.x = diffCanvasMousePos.x - (width * 0.5) / (scale * 3) 
+    context.y = diffCanvasMousePos.y - (height * 0.5) / scale
     const isOutOfBounds = context.x > diffCanvas.width || context.y > diffCanvas.height
     if(context.isRenderingOutOfBounds){
       if(isOutOfBounds && !forceRerender){ return }
@@ -73,18 +75,39 @@ export function addMagnifierBehavior (component) {
 }
 
 /**
+ * Maps mouse position to canvas coordinates
  * @param {HTMLCanvasElement} canvas - canvas
  * @param {MouseEvent} event - pointer event
  */
 function  getMousePos (canvas, event) {
-  var rect = canvas.getBoundingClientRect(), // abs. size of element
-    scaleX = canvas.width / rect.width,    // relationship bitmap vs. element for x
-    scaleY = canvas.height / rect.height  // relationship bitmap vs. element for y
+  const rect = canvas.getBoundingClientRect()
+  const scaleX = canvas.width / rect.width    // relationship bitmap vs. element for x
+  const scaleY = canvas.height / rect.height  // relationship bitmap vs. element for y
+  const x = (event.clientX - rect.left) * scaleX
+  const y = (event.clientY - rect.top) * scaleY
+  return new DOMPointReadOnly(x, y)
+}
 
-  return {
-    x: (event.clientX - rect.left) * scaleX,   // scale mouse coordinates after they have
-    y: (event.clientY - rect.top) * scaleY,     // been adjusted to be relative to element
+/**
+ * @param {HTMLCanvasElement} magnifier - 2d canvas to draw the grid
+ * @param {ReturnType<typeof initContext>} context - function context
+ */
+function updateMagnifierDimensions (magnifier, context) {
+  const dpr = window.devicePixelRatio || 1;
+
+  if(isNaN(context.magnifierCanvasDimensions.width) || context.dpr !== dpr){
+    const rect = magnifier.getBoundingClientRect()
+    const resolution = {
+      width: rect.width * dpr,
+      height: rect.height * dpr,
+    }
+    context.dpr = dpr
+    context.magnifierCanvasDimensions = rect
+    context.magnifierCanvasResolution = resolution
+    magnifier.width = resolution.width
+    magnifier.height = resolution.height
   }
+
 }
 
 /**
@@ -94,20 +117,10 @@ function  getMousePos (canvas, event) {
 function redraw (magnifier, context) {
   const magnifierContext = magnifier.getContext('2d')
   if (!magnifierContext) { return }
-  const dpr = window.devicePixelRatio || 1;
-
-  if(isNaN(context.diffCanvasWidth) || context.dpr !== dpr){
-    const rect = magnifier.getBoundingClientRect()
-    context.dpr = dpr
-    context.diffCanvasWidth = rect.width * dpr
-    context.diffCanvasHeight = rect.height * dpr
-    magnifier.width = context.diffCanvasWidth
-    magnifier.height = context.diffCanvasHeight
-  }
-
+  updateMagnifierDimensions(magnifier, context)
   magnifierContext.imageSmoothingEnabled = false
-  const { diffCanvasWidth, diffCanvasHeight } = context
-  magnifierContext.clearRect(0, 0, diffCanvasWidth, diffCanvasHeight)
+  const { width, height } = context.magnifierCanvasResolution
+  magnifierContext.clearRect(0, 0, width, height)
   drawImages(magnifierContext, context)
   drawGrid(magnifierContext, context)
   drawSelectedCellInGrid(magnifierContext, context)
@@ -120,10 +133,9 @@ function redraw (magnifier, context) {
  * @param {ReturnType<typeof initContext>} context - function context
  */
 const drawImageBorders = (magnifierContext, context) => {
-  const { diffCanvasWidth, diffCanvasHeight } = context
+  const { width: resolutionWidth, height } = context.magnifierCanvasResolution
 
-  const width = diffCanvasWidth / 3
-  const height = diffCanvasHeight
+  const width = resolutionWidth / 3
   magnifierContext.strokeRect(0, 0, width, height)
   magnifierContext.strokeRect(width, 0, width, height)
   magnifierContext.strokeRect(width * 2, 0, width, height)
@@ -135,13 +147,13 @@ const drawImageBorders = (magnifierContext, context) => {
  * @param {ReturnType<typeof initContext>} context - function context
  */
 function drawImages (magnifierContext, context) {
-  const { data, x, y, diffCanvasWidth, diffCanvasHeight, componentElement, dpr } = context
+  const { data, x, y, magnifierCanvasResolution, componentElement, dpr } = context
   const diffCanvas = divCanvasEl(componentElement)
   const  scale = context.scale * dpr
 
   if (!data) { return }
-  const height = diffCanvasHeight
-  const width = diffCanvasWidth / 3
+  const { width: resolutionWidth, height } = magnifierCanvasResolution
+  const width = resolutionWidth / 3
 
   const { img1Canvas, img2Canvas } = data
 
@@ -206,8 +218,8 @@ const initContext = (component) => ({
   x: 0,
   y: 0,
   dpr: window.devicePixelRatio || 1,
-  diffCanvasWidth: NaN,
-  diffCanvasHeight: NaN,
+  magnifierCanvasDimensions: { width: NaN, height: NaN },
+  magnifierCanvasResolution: { width: NaN, height: NaN },
   diffCanvasMousePos: { x: NaN, y: NaN },
   isTooltipFollowingPointer: true,
   isRenderingOutOfBounds: false,
@@ -229,8 +241,8 @@ const initContext = (component) => ({
  */
 function drawCheckerBg (magnifierContext, context, initX = 0) {
 
-  const width = context.diffCanvasWidth / 3
-  const height = context.diffCanvasHeight
+  const { width: resolutionWidth, height } = context.magnifierCanvasResolution
+  const width = resolutionWidth / 3
   const { dpr } = context
   const scale = context.scale * dpr
   const x = context.x * dpr
@@ -281,8 +293,8 @@ function drawGrid (magnifierContext, context) {
   if (!context.showGrid || context.scale <= 1) { return }
 
   const {x, y, dpr} = context
-  const width = context.diffCanvasWidth / 3
-  const height = context.diffCanvasHeight
+  const { width, height } = context.magnifierCanvasResolution
+  const sectionWidth = width / 3
   const scale = context.scale * dpr
 
   magnifierContext.save()
@@ -290,19 +302,18 @@ function drawGrid (magnifierContext, context) {
   const marginXScale = 0.5 - ((x - Math.floor(x)) * scale)
   const marginYScale = 0.5 - ((y - Math.floor(y)) * scale)
 
-  for (let i = marginXScale % scale + scale; i < width; i += scale) {
+  for (let i = marginXScale % scale + scale; i < sectionWidth; i += scale) {
     magnifierContext.moveTo(i, 0)
     magnifierContext.lineTo(i, height)
-    magnifierContext.moveTo(i + width, 0)
-    magnifierContext.lineTo(i + width, height)
-    magnifierContext.moveTo(i + width * 2, 0)
-    magnifierContext.lineTo(i + width * 2, height)
+    magnifierContext.moveTo(i + sectionWidth, 0)
+    magnifierContext.lineTo(i + sectionWidth, height)
+    magnifierContext.moveTo(i + sectionWidth * 2, 0)
+    magnifierContext.lineTo(i + sectionWidth * 2, height)
   }
 
-  const magWidth = context.diffCanvasWidth
   for (let i = marginYScale; i < height; i += scale) {
     magnifierContext.moveTo(0, i)
-    magnifierContext.lineTo(magWidth, i)
+    magnifierContext.lineTo(width, i)
   }
 
   magnifierContext.strokeStyle = '#888'
@@ -319,7 +330,7 @@ function drawGrid (magnifierContext, context) {
 function drawSelectedCellInGrid (magnifierContext, context) {
   if (!context.showGrid || context.scale <= 1) { return }
 
-  const width = context.diffCanvasWidth / 3
+  const width = context.magnifierCanvasResolution.width / 3
   const { diffCanvasMousePos, dpr, x, y } = context
   const scale = context.scale * dpr
 
@@ -339,7 +350,6 @@ function drawSelectedCellInGrid (magnifierContext, context) {
   magnifierContext.beginPath()
   magnifierContext.strokeStyle = '#fff'
 
-  // for (let i = marginXScale % scale + scale; i < width; i += scale) {
   for (let i = 0; i < 3; i += 1) {
     magnifierContext.strokeRect(diffXInGrid + width*i, diffYInGrid, scale, scale)
   }
