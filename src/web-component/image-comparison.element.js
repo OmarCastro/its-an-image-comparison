@@ -158,6 +158,7 @@ export class ImageComparisonElement extends HTMLElement {
         img1: img1.data,
         img2: img2.data,
         output: diff.data,
+        threshold: this.threshold,
         diffMapOutput: diffMap,
         width,
         height,
@@ -189,6 +190,14 @@ export class ImageComparisonElement extends HTMLElement {
 
   set antialias (val) {
     this.toggleAttribute('data-antialias', !!val)
+  }
+
+  get threshold () {
+    return parseFloat(this.getAttribute('data-threshold') ?? "0")
+  }
+
+  set threshold (val) {
+    this.setAttribute('data-threshold', `${val}`)
   }
 
   get [isImageComparisonElementSymbol](){ return true }
