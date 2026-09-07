@@ -3,7 +3,7 @@
 /** @typedef {import('../web-component/image-comparison.element.js').ImageComparisonElement} ImageComparisonElement */
 
 export const containerEl = shadowQuery('div.container')
-export const divCanvasEl = shadowQuery('canvas.diff-image')
+export const diffCanvasEl = shadowQuery('canvas.diff-image')
 export const magnifierTooltipEl = shadowQuery('div.glass-magnifier-tooltip')
 export const magnifierColorDiffInfoEl = shadowQuery('div.color-diff-info')
 export const magnifierCanvasEl = shadowQuery('canvas.glass-magnifier')

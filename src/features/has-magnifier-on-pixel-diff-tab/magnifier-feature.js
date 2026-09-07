@@ -1,5 +1,5 @@
 import { getNormalizedDiffs } from '../../utils/color-diff.js'
-import { divCanvasEl, magnifierTooltipEl, magnifierColorBoxesEl, magnifierColorDiffInfoEl, magnifierCanvasEl, toggleGridViewEl } from '../../utils/image-comparison-dom.js'
+import { diffCanvasEl, magnifierTooltipEl, magnifierColorBoxesEl, magnifierColorDiffInfoEl, magnifierCanvasEl, toggleGridViewEl } from '../../utils/image-comparison-dom.js'
 /** @import {ImageComparisonElement} from '../../web-component/image-comparison.element.js' */
 
 
@@ -10,7 +10,7 @@ import { divCanvasEl, magnifierTooltipEl, magnifierColorBoxesEl, magnifierColorD
 export function addMagnifierBehavior (component) {
   const magnifier = magnifierCanvasEl(component)
   const tooltip = magnifierTooltipEl(component)
-  const diffCanvas = divCanvasEl(component)
+  const diffCanvas = diffCanvasEl(component)
 
   const context = initContext(component)
   const rerender = redraw.bind(null, magnifier, context)
@@ -148,7 +148,7 @@ const drawImageBorders = (magnifierContext, context) => {
  */
 function drawImages (magnifierContext, context) {
   const { data, x, y, magnifierCanvasResolution, componentElement, dpr } = context
-  const diffCanvas = divCanvasEl(componentElement)
+  const diffCanvas = diffCanvasEl(componentElement)
   const  scale = context.scale * dpr
 
   if (!data) { return }

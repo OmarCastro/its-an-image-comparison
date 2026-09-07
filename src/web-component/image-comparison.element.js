@@ -2,7 +2,7 @@ import html from './image-comparison.element.html'
 import css from './image-comparison.element.css'
 import { calculateDiff, fallbackAAColor, fallbackDiffColor } from '../utils/color-diff.js'
 import { colorOrFallbackColorToRGBA } from '../utils/html-color-to-rgba.js'
-import { isImageComparisonElementSymbol } from '../utils/image-comparison-dom.js'
+import { diffCanvasEl, isImageComparisonElementSymbol } from '../utils/image-comparison-dom.js'
 import { addMagnifierBehavior } from '../features/has-magnifier-on-pixel-diff-tab/magnifier-feature.js'
 
 let loadTemplate = () => {
@@ -219,43 +219,41 @@ function updateDiffColors (component) {
   const diffColorToApply = getComputedStyle(component).getPropertyValue('--diff-color') || fallbackDiffColor
   if (aaColorToApply === appliedAAColor && diffColorToApply === appliedDiffColor) { return }
 
-  const { shadowRoot } = component
-  if (!shadowRoot) { return }
-  shadowRoot.querySelectorAll('canvas.diff-image').forEach(canvas => {
-    const context = canvas.getContext('2d')
-    if (!context) { return }
-    const diff = context.getImageData(0, 0, canvas.width, canvas.height, { colorSpace: 'srgb' })
+  const canvas = diffCanvasEl(component)
+  
+  const context = canvas.getContext('2d')
+  if (!context) { return }
+  const diff = context.getImageData(0, 0, canvas.width, canvas.height, { colorSpace: 'srgb' })
 
-    if (aaColorToApply !== appliedAAColor) {
-      const aaRGBAColor = colorOrFallbackColorToRGBA(aaColorToApply, fallbackAAColor)
-      for (let pos = 0, e = diffMap.length; pos < e; pos++) {
-        if (diffMap[pos] === 0b0011) {
-          const colorPos = pos * 4
-          const { data } = diff
-          data[colorPos] = aaRGBAColor[0]
-          data[colorPos + 1] = aaRGBAColor[1]
-          data[colorPos + 2] = aaRGBAColor[2]
-          data[colorPos + 3] = aaRGBAColor[3]
-        }
+  if (aaColorToApply !== appliedAAColor) {
+    const aaRGBAColor = colorOrFallbackColorToRGBA(aaColorToApply, fallbackAAColor)
+    for (let pos = 0, e = diffMap.length; pos < e; pos++) {
+      if (diffMap[pos] === 0b0011) {
+        const colorPos = pos * 4
+        const { data } = diff
+        data[colorPos] = aaRGBAColor[0]
+        data[colorPos + 1] = aaRGBAColor[1]
+        data[colorPos + 2] = aaRGBAColor[2]
+        data[colorPos + 3] = aaRGBAColor[3]
       }
-      data.appliedAAColor = aaColorToApply
     }
-    if (diffColorToApply !== appliedDiffColor) {
-      const diffRGBAColor = colorOrFallbackColorToRGBA(diffColorToApply, fallbackDiffColor)
-      for (let pos = 0, e = diffMap.length; pos < e; pos++) {
-        if (diffMap[pos] === 0b0001) {
-          const colorPos = pos * 4
-          const { data } = diff
-          data[colorPos] = diffRGBAColor[0]
-          data[colorPos + 1] = diffRGBAColor[1]
-          data[colorPos + 2] = diffRGBAColor[2]
-          data[colorPos + 3] = diffRGBAColor[3]
-        }
+    data.appliedAAColor = aaColorToApply
+  }
+  if (diffColorToApply !== appliedDiffColor) {
+    const diffRGBAColor = colorOrFallbackColorToRGBA(diffColorToApply, fallbackDiffColor)
+    for (let pos = 0, e = diffMap.length; pos < e; pos++) {
+      if (diffMap[pos] === 0b0001) {
+        const colorPos = pos * 4
+        const { data } = diff
+        data[colorPos] = diffRGBAColor[0]
+        data[colorPos + 1] = diffRGBAColor[1]
+        data[colorPos + 2] = diffRGBAColor[2]
+        data[colorPos + 3] = diffRGBAColor[3]
       }
-      data.appliedDiffColor = diffColorToApply
     }
-    context.putImageData(diff, 0, 0)
-  })
+    data.appliedDiffColor = diffColorToApply
+  }
+  context.putImageData(diff, 0, 0)
 }
 
 /**
