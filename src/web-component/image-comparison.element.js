@@ -200,6 +200,36 @@ export class ImageComparisonElement extends HTMLElement {
     this.setAttribute('data-threshold', `${val}`)
   }
 
+
+  static get observedAttributes(){
+    return ['data-antialias', 'data-threshold']
+  }
+
+  /**
+   * Custom element attributeChangedCallback
+   * @param {string} name - attribute name
+   * @param {string|null} oldValue - previous attribute value
+   * @param {string|null} newValue - current attribute value
+   */
+  attributeChangedCallback(name, oldValue, newValue) {
+    if(name === 'data-antialias'){
+      if((oldValue == null) !== (newValue == null) ){
+        this.updateCanvas()
+      }
+    } else if(name === 'data-threshold'){
+      if(newValue){
+        const result = parseFloat(`${newValue}`)
+        if(isNaN(result)){
+          if(oldValue == null){ this.removeAttribute(name) }
+          else { this.setAttribute(name, oldValue) }
+          return
+        }
+      }
+      this.updateCanvas()
+    }
+  }
+
+
   get [isImageComparisonElementSymbol](){ return true }
 }
 
